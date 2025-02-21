@@ -5,16 +5,16 @@ export function Footer() {
         <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
           Built by{" "}
           <a
-            href="https://github.com/yourusername"
+            href="https://lifekit.sg"
             target="_blank"
             rel="noreferrer"
             className="font-medium underline underline-offset-4"
           >
-            Your Name
+            lifekit.sg
           </a>
           . The source code is available on{" "}
           <a
-            href="https://github.com/yourusername/flight-tracker"
+            href="https://github.com/rizkinovriandri/flight-tracker"
             target="_blank"
             rel="noreferrer"
             className="font-medium underline underline-offset-4"
