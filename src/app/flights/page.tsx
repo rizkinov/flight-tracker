@@ -107,12 +107,14 @@ export default function FlightsPage() {
         id: Math.random().toString(36).substring(7),
         flightNumber: "",
         date: new Date().toISOString().split('T')[0],
-        from: "",
+        from: "Singapore",
         to: "",
         days: 1,
         notes: ""
       }
     ])
+    // Update used countries to include Singapore
+    setUsedCountries(prev => new Set(Array.from(prev).concat("Singapore")))
   }
 
   const updateFlight = (id: string, field: keyof BatchFlight, value: string | number) => {

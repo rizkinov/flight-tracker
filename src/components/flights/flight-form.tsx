@@ -123,12 +123,12 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
   const form = useForm<FlightFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      flightNumber: '',
-      from: '',
-      to: '',
+      flightNumber: "",
       date: new Date().toISOString().split('T')[0],
+      from: "Singapore",
+      to: "",
       days: 1,
-      notes: '',
+      notes: ""
     }
   })
 
