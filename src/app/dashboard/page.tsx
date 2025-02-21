@@ -1,5 +1,7 @@
 "use client"
 
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { FlightList } from "@/components/flights/flight-list"
@@ -23,9 +25,16 @@ import { deleteAllFlights } from "@/lib/services/flights"
 import { useToast } from "@/components/ui/use-toast"
 
 export default function DashboardPage() {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
   const { toast } = useToast()
-  const [hasFlights, setHasFlights] = useState(true) // This will be controlled by FlightList
+  const router = useRouter()
+  const [hasFlights, setHasFlights] = useState(true)
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/')
+    }
+  }, [user, loading, router])
 
   const handleReset = async () => {
     try {
@@ -42,6 +51,18 @@ export default function DashboardPage() {
         variant: "destructive",
       })
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return null // Will be redirected by useEffect
   }
 
   return (
