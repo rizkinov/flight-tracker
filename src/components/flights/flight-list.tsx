@@ -105,23 +105,31 @@ export function FlightList({ onFlightsChange }: FlightListProps) {
       <TableCaption>A list of your recent flights.</TableCaption>
       <TableHeader>
         <TableRow>
-          <TableHead>Flight #</TableHead>
+          <TableHead>Flight</TableHead>
+          <TableHead className="w-[150px]">From</TableHead>
+          <TableHead className="w-[150px]">To</TableHead>
           <TableHead>Date</TableHead>
-          <TableHead>From</TableHead>
-          <TableHead>To</TableHead>
-          <TableHead className="w-[150px]">Notes</TableHead>
-          <TableHead className="w-[100px]">Actions</TableHead>
+          <TableHead>Days</TableHead>
+          <TableHead>Notes</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {flights.map((flight) => (
           <TableRow key={flight.id}>
-            <TableCell className="font-medium">{flight.flightNumber}</TableCell>
+            <TableCell>{flight.flightNumber}</TableCell>
+            <TableCell className="truncate" title={flight.from}>
+              {flight.from.length > 15 ? `${flight.from.slice(0, 15)}...` : flight.from}
+            </TableCell>
+            <TableCell className="truncate" title={flight.to}>
+              {flight.to.length > 15 ? `${flight.to.slice(0, 15)}...` : flight.to}
+            </TableCell>
             <TableCell>{flight.date}</TableCell>
-            <TableCell>{flight.from}</TableCell>
-            <TableCell>{flight.to}</TableCell>
-            <TableCell className="truncate">{flight.notes}</TableCell>
-            <TableCell>
+            <TableCell>{flight.days}</TableCell>
+            <TableCell className="max-w-[200px] truncate">
+              {flight.notes}
+            </TableCell>
+            <TableCell className="text-right">
               <FlightActions
                 flight={flight}
                 onEdit={handleEdit}

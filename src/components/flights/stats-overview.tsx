@@ -14,12 +14,18 @@ interface CountryData {
   color: string
 }
 
-const COLORS = {
-  "United Kingdom": "#60a5fa", // Blue-400
-  "France": "#f97316",        // Orange-500
-  "Germany": "#2dd4bf",       // Teal-400
-  "Netherlands": "#f472b6",   // Pink-400
-}
+const COLORS = [
+  "#fecdd3", // Light Pink
+  "#bfdbfe", // Light Blue
+  "#bbf7d0", // Light Green
+  "#ddd6fe", // Light Purple
+  "#fed7aa", // Light Orange
+  "#e9d5ff", // Light Violet
+  "#fde68a", // Light Yellow
+  "#a5f3fc", // Light Cyan
+  "#c7d2fe", // Light Indigo
+  "#f5d0fe", // Light Magenta
+]
 
 export function StatsOverview() {
   const { user } = useAuth()
@@ -50,6 +56,7 @@ export function StatsOverview() {
     const countryDays = new Map<string, number>()
     let totalDays = 0
     let longestStay = 0
+    let longestStayCountry = ""
     let mostVisitedCountry = ""
     let mostVisitedDays = 0
 
@@ -65,6 +72,7 @@ export function StatsOverview() {
       // Update longest stay
       if (days > longestStay) {
         longestStay = days
+        longestStayCountry = flight.to
       }
 
       // Update most visited
@@ -75,10 +83,10 @@ export function StatsOverview() {
     })
 
     const countryData: CountryData[] = Array.from(countryDays.entries())
-      .map(([name, days]) => ({
+      .map(([name, days], index) => ({
         name,
         days,
-        color: COLORS[name as keyof typeof COLORS] || "#94a3b8" // Default to slate-400
+        color: COLORS[index % COLORS.length]
       }))
 
     const avgStayDuration = flights.length ? Math.round(totalDays / flights.length) : 0
@@ -88,24 +96,30 @@ export function StatsOverview() {
       totalFlights: flights.length,
       avgStayDuration,
       longestStay,
+      longestStayCountry,
       mostVisitedCountry,
       totalDays
     }
   }, [flights])
 
-  // Tax threshold calculations
-  const maxDaysOutside = 183
-  const daysOutsideBaseCountry = stats.totalDays
-  const daysLeft = maxDaysOutside - daysOutsideBaseCountry
-  const percentageUsed = (daysOutsideBaseCountry / maxDaysOutside) * 100
+  // Tax residency calculations
+  const currentYear = new Date().getFullYear()
+  const isLeapYear = (year: number) => {
+    return year % 400 === 0 || (year % 100 !== 0 && year % 4 === 0)
+  }
+  const daysInYear = isLeapYear(currentYear) ? 366 : 365
+  const minDaysRequired = 183
+  const maxTravelDays = daysInYear - minDaysRequired // Maximum days allowed outside Singapore
+  const daysInSingapore = daysInYear - stats.totalDays // Days not traveling are considered as days in Singapore
+  const remainingTravelDays = Math.max(0, maxTravelDays - stats.totalDays)
+  
+  // Calculate percentage based on travel days used
+  const travelDaysPercentage = Math.min(100, Math.round((stats.totalDays / maxTravelDays) * 100))
 
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-semibold tracking-tight">Statistics</h2>
-          <BaseCountrySelector />
-        </div>
+        <h2 className="text-2xl font-semibold tracking-tight">Statistics</h2>
         <div className="flex min-h-[400px] items-center justify-center">
           <div className="text-muted-foreground">Loading statistics...</div>
         </div>
@@ -116,11 +130,7 @@ export function StatsOverview() {
   if (!flights.length) {
     return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-semibold tracking-tight">Statistics</h2>
-          <BaseCountrySelector />
-        </div>
-
+        <h2 className="text-2xl font-semibold tracking-tight">Statistics</h2>
         <Card className="p-8">
           <CardHeader className="text-center">
             <CardTitle>No Flight Data Available</CardTitle>
@@ -135,10 +145,7 @@ export function StatsOverview() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold tracking-tight">Statistics</h2>
-        <BaseCountrySelector />
-      </div>
+      <h2 className="text-2xl font-semibold tracking-tight">Statistics</h2>
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Left column - Charts */}
@@ -156,7 +163,6 @@ export function StatsOverview() {
                   cx="50%"
                   cy="50%"
                   outerRadius={100}
-                  label={(entry) => `${entry.name} (${entry.days})`}
                 >
                   {stats.countryData.map((entry, index) => (
                     <Cell 
@@ -174,7 +180,21 @@ export function StatsOverview() {
                   }} 
                 />
                 <Legend 
-                  formatter={(value) => <span className="text-sm text-muted-foreground">{value}</span>}
+                  formatter={(value) => (
+                    <span 
+                      className="text-xs text-muted-foreground"
+                      title={value}
+                    >
+                      {value.length > 15 ? `${value.slice(0, 15)}...` : value}
+                    </span>
+                  )}
+                  layout="vertical"
+                  align="right"
+                  verticalAlign="middle"
+                  wrapperStyle={{
+                    fontSize: '10px',
+                    paddingLeft: '10px',
+                  }}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -213,8 +233,8 @@ export function StatsOverview() {
             </CardHeader>
             <CardContent>
               <div className="text-4xl font-bold">{stats.longestStay}</div>
-              <p className="text-xs text-muted-foreground">
-                Days in one location
+              <p className="text-sm text-muted-foreground" title={stats.longestStayCountry}>
+                Days in {stats.longestStayCountry.length > 15 ? `${stats.longestStayCountry.slice(0, 15)}...` : stats.longestStayCountry}
               </p>
             </CardContent>
           </Card>
@@ -224,7 +244,9 @@ export function StatsOverview() {
               <CardTitle>Most Visited</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold truncate">{stats.mostVisitedCountry}</div>
+              <div className="text-2xl font-bold" title={stats.mostVisitedCountry}>
+                {stats.mostVisitedCountry.length > 15 ? `${stats.mostVisitedCountry.slice(0, 15)}...` : stats.mostVisitedCountry}
+              </div>
               <p className="text-xs text-muted-foreground">
                 Highest days count
               </p>
@@ -235,19 +257,26 @@ export function StatsOverview() {
         {/* Full width Tax Status */}
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle>Tax Residency Status</CardTitle>
-            <CardDescription>183-day rule threshold tracker</CardDescription>
+            <CardTitle>Singapore Tax Residency Status</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Days used: {daysOutsideBaseCountry}</span>
-                <span>Days remaining: {daysLeft}</span>
+                <span>Days traveled: {stats.totalDays}</span>
+                <span>Days remaining: {remainingTravelDays}</span>
               </div>
-              <Progress value={percentageUsed} className="h-2" />
-              {percentageUsed > 80 && (
+              <Progress value={travelDaysPercentage} className="h-2" />
+              {daysInSingapore < minDaysRequired ? (
                 <p className="text-sm text-destructive">
-                  Warning: Approaching tax residency threshold
+                  You need {minDaysRequired - daysInSingapore} more days in Singapore to qualify for tax residency
+                </p>
+              ) : remainingTravelDays > 0 ? (
+                <p className="text-sm text-green-600">
+                  You can travel for up to {remainingTravelDays} more days while maintaining tax residency
+                </p>
+              ) : (
+                <p className="text-sm text-destructive">
+                  You have exceeded the maximum travel days for maintaining tax residency
                 </p>
               )}
             </div>

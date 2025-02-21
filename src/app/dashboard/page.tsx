@@ -7,9 +7,13 @@ import { Button } from "@/components/ui/button"
 import { FlightList } from "@/components/flights/flight-list"
 import { StatsOverview } from "@/components/flights/stats-overview"
 import { EmptyState } from "@/components/flights/empty-state"
-import { Plus, Trash2 } from "lucide-react"
+import { Plus, Trash2, FileDown } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { useState } from "react"
+import * as XLSX from 'xlsx'
+import jsPDF from 'jspdf'
+import 'jspdf-autotable'
+import { UserOptions } from 'jspdf-autotable'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,8 +25,20 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { deleteAllFlights, getUserFlights } from "@/lib/services/flights"
 import { useToast } from "@/components/ui/use-toast"
+import { FlightForm } from "@/components/flights/flight-form"
+
+// Extend jsPDF type to include autoTable
+interface jsPDFWithAutoTable extends jsPDF {
+  autoTable: (options: UserOptions) => jsPDF;
+}
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth()
@@ -30,6 +46,91 @@ export default function DashboardPage() {
   const router = useRouter()
   const [hasFlights, setHasFlights] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [showAddFlight, setShowAddFlight] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  const refreshData = async () => {
+    if (!user) return
+    try {
+      const flights = await getUserFlights(user.uid)
+      setHasFlights(flights.length > 0)
+      setRefreshKey(prev => prev + 1)
+    } catch (error) {
+      console.error('Error refreshing flights:', error)
+      toast({
+        title: "Error",
+        description: "Failed to refresh flight data.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleExport = async (format: 'pdf' | 'excel') => {
+    if (!user) return
+
+    try {
+      const flights = await getUserFlights(user.uid)
+      
+      if (flights.length === 0) {
+        toast({
+          title: "No Data",
+          description: "There are no flights to export.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      // Prepare the data for export
+      const data = flights.map(flight => ({
+        'Flight Number': flight.flightNumber,
+        'Date': flight.date,
+        'From': flight.from,
+        'To': flight.to,
+        'Days': flight.days,
+        'Notes': flight.notes || ''
+      }))
+
+      if (format === 'excel') {
+        // Create Excel file
+        const worksheet = XLSX.utils.json_to_sheet(data)
+        const workbook = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Flights')
+        XLSX.writeFile(workbook, 'flights.xlsx')
+      } else {
+        // Create PDF file
+        const doc = new jsPDF() as jsPDFWithAutoTable
+        
+        // Add title
+        doc.setFontSize(16)
+        doc.text('Flight Records', 14, 20)
+        
+        // Add timestamp
+        doc.setFontSize(10)
+        doc.text(`Generated on ${new Date().toLocaleString()}`, 14, 30)
+        
+        // Add table
+        doc.autoTable({
+          head: [['Flight Number', 'Date', 'From', 'To', 'Days', 'Notes']],
+          body: data.map(row => Object.values(row)),
+          startY: 40,
+        })
+        
+        doc.save('flights.pdf')
+      }
+
+      toast({
+        title: "Export Successful",
+        description: `Your flights have been exported as ${format.toUpperCase()}.`,
+      })
+    } catch (error) {
+      console.error('Error exporting flights:', error)
+      toast({
+        title: "Export Failed",
+        description: "Failed to export flights. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -98,7 +199,7 @@ export default function DashboardPage() {
       
       {hasFlights ? (
         <>
-          <StatsOverview />
+          <StatsOverview key={refreshKey} />
           <div>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-semibold tracking-tight">Flight History</h2>
@@ -129,20 +230,42 @@ export default function DashboardPage() {
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
-                <Button asChild>
-                  <Link href="/flights">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Flight
-                  </Link>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline">
+                      <FileDown className="mr-2 h-4 w-4" />
+                      Export
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                      Export as PDF
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleExport('excel')}>
+                      Export as Excel
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <Button onClick={() => setShowAddFlight(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Flight
                 </Button>
               </div>
             </div>
-            <FlightList onFlightsChange={setHasFlights} />
+            <FlightList key={refreshKey} onFlightsChange={setHasFlights} />
           </div>
         </>
       ) : (
         <EmptyState />
       )}
+
+      <FlightForm 
+        open={showAddFlight} 
+        onOpenChange={setShowAddFlight}
+        onSuccess={refreshData}
+      />
     </div>
   )
 } 

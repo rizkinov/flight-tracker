@@ -45,16 +45,22 @@ export interface UpdateFlightData {
 }
 
 export async function createFlight(userId: string, data: CreateFlightData) {
+  console.log('Creating flight in Firebase:', { userId, data })
   try {
-    const docRef = await addDoc(collection(db, 'flights'), {
+    const flightData = {
       userId,
       ...data,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
-    })
+    }
+    console.log('Prepared flight data:', flightData)
+    
+    const docRef = await addDoc(collection(db, 'flights'), flightData)
+    console.log('Flight document created with ID:', docRef.id)
+    
     return docRef.id
   } catch (error) {
-    console.error('Error creating flight:', error)
+    console.error('Error in createFlight:', error)
     throw error
   }
 }
@@ -103,6 +109,7 @@ export async function deleteAllFlights(userId: string) {
 }
 
 export async function getUserFlights(userId: string) {
+  console.log('Fetching flights for user:', userId)
   try {
     const q = query(
       collection(db, 'flights'),
@@ -110,10 +117,12 @@ export async function getUserFlights(userId: string) {
       orderBy('date', 'desc')
     )
     const querySnapshot = await getDocs(q)
-    return querySnapshot.docs.map(doc => ({
+    const flights = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
     })) as Flight[]
+    console.log('Retrieved flights:', flights.length)
+    return flights
   } catch (error) {
     console.error('Error getting user flights:', error)
     throw error
