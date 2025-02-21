@@ -26,13 +26,15 @@ export function FlightList({ onFlightsChange }: FlightListProps) {
   const [loading, setLoading] = useState(true)
 
   const loadFlights = useCallback(async () => {
-    if (!user) return
+    if (!user) {
+      setLoading(false)
+      return
+    }
     
     try {
       const userFlights = await getUserFlights(user.uid)
       setFlights(userFlights)
       onFlightsChange?.(userFlights.length > 0)
-      setLoading(false)
     } catch (error) {
       console.error('Error loading flights:', error)
       toast({
@@ -40,6 +42,7 @@ export function FlightList({ onFlightsChange }: FlightListProps) {
         description: "Failed to load flights. Please try again.",
         variant: "destructive",
       })
+    } finally {
       setLoading(false)
     }
   }, [user, onFlightsChange, toast])

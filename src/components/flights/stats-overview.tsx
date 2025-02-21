@@ -28,7 +28,11 @@ export function StatsOverview() {
 
   useEffect(() => {
     async function loadFlights() {
-      if (!user) return
+      if (!user) {
+        setLoading(false)
+        return
+      }
+      
       try {
         const userFlights = await getUserFlights(user.uid)
         setFlights(userFlights)
@@ -38,6 +42,7 @@ export function StatsOverview() {
         setLoading(false)
       }
     }
+    
     loadFlights()
   }, [user])
 
@@ -96,8 +101,14 @@ export function StatsOverview() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <div className="text-muted-foreground">Loading statistics...</div>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-semibold tracking-tight">Statistics</h2>
+          <BaseCountrySelector />
+        </div>
+        <div className="flex min-h-[400px] items-center justify-center">
+          <div className="text-muted-foreground">Loading statistics...</div>
+        </div>
       </div>
     )
   }

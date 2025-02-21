@@ -21,24 +21,46 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { deleteAllFlights } from "@/lib/services/flights"
+import { deleteAllFlights, getUserFlights } from "@/lib/services/flights"
 import { useToast } from "@/components/ui/use-toast"
 
 export default function DashboardPage() {
-  const { user, loading } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
-  const [hasFlights, setHasFlights] = useState(true)
+  const [hasFlights, setHasFlights] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!authLoading && !user) {
       router.push('/')
+      return
     }
-  }, [user, loading, router])
+
+    async function checkFlights() {
+      if (!user) return
+      try {
+        const flights = await getUserFlights(user.uid)
+        setHasFlights(flights.length > 0)
+      } catch (error) {
+        console.error('Error checking flights:', error)
+        toast({
+          title: "Error",
+          description: "Failed to load flight data. Please try again.",
+          variant: "destructive",
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    checkFlights()
+  }, [user, authLoading, router, toast])
 
   const handleReset = async () => {
+    if (!user) return
     try {
-      await deleteAllFlights(user!.uid)
+      await deleteAllFlights(user.uid)
       setHasFlights(false)
       toast({
         title: "Data reset successful",
@@ -53,7 +75,7 @@ export default function DashboardPage() {
     }
   }
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center">
         <div className="text-muted-foreground">Loading...</div>
@@ -77,7 +99,6 @@ export default function DashboardPage() {
       {hasFlights ? (
         <>
           <StatsOverview />
-
           <div>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-semibold tracking-tight">Flight History</h2>
