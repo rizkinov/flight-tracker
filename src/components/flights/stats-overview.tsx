@@ -1,33 +1,127 @@
 "use client"
 
+import { useEffect, useState, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts"
 import { BaseCountrySelector } from "./base-country-selector"
 import { Progress } from "@/components/ui/progress"
+import { useAuth } from "@/lib/auth-context"
+import { getUserFlights, Flight } from "@/lib/services/flights"
 
-const dummyCountryData = [
-  { name: "United Kingdom", days: 15, color: "#60a5fa" },  // Blue-400: cool
-  { name: "France", days: 10, color: "#f97316" },         // Orange-500: warm
-  { name: "Germany", days: 8, color: "#2dd4bf" },         // Teal-400: cool
-  { name: "Netherlands", days: 7, color: "#f472b6" },     // Pink-400: warm
-]
+interface CountryData {
+  name: string
+  days: number
+  color: string
+}
 
-const totalFlights = 6
-const daysInBaseCountry = 15
-const totalDays = dummyCountryData.reduce((acc, curr) => acc + curr.days, 0)
-const daysOutsideBaseCountry = totalDays - daysInBaseCountry
-
-// Tax threshold calculations
-const maxDaysOutside = 183
-const daysLeft = maxDaysOutside - daysOutsideBaseCountry
-const percentageUsed = (daysOutsideBaseCountry / maxDaysOutside) * 100
-
-// Travel pattern stats
-const avgStayDuration = Math.round(totalDays / totalFlights)
-const longestStay = Math.max(...dummyCountryData.map(country => country.days))
-const mostVisitedCountry = dummyCountryData.reduce((a, b) => a.days > b.days ? a : b).name
+const COLORS = {
+  "United Kingdom": "#60a5fa", // Blue-400
+  "France": "#f97316",        // Orange-500
+  "Germany": "#2dd4bf",       // Teal-400
+  "Netherlands": "#f472b6",   // Pink-400
+}
 
 export function StatsOverview() {
+  const { user } = useAuth()
+  const [flights, setFlights] = useState<Flight[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadFlights() {
+      if (!user) return
+      try {
+        const userFlights = await getUserFlights(user.uid)
+        setFlights(userFlights)
+      } catch (error) {
+        console.error('Error loading flights:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadFlights()
+  }, [user])
+
+  const stats = useMemo(() => {
+    const countryDays = new Map<string, number>()
+    let totalDays = 0
+    let longestStay = 0
+    let mostVisitedCountry = ""
+    let mostVisitedDays = 0
+
+    flights.forEach(flight => {
+      const days = flight.days || 1 // Default to 1 day if not specified
+      totalDays += days
+
+      // Update country stats
+      const currentDays = countryDays.get(flight.to) || 0
+      const newDays = currentDays + days
+      countryDays.set(flight.to, newDays)
+
+      // Update longest stay
+      if (days > longestStay) {
+        longestStay = days
+      }
+
+      // Update most visited
+      if (newDays > mostVisitedDays) {
+        mostVisitedCountry = flight.to
+        mostVisitedDays = newDays
+      }
+    })
+
+    const countryData: CountryData[] = Array.from(countryDays.entries())
+      .map(([name, days]) => ({
+        name,
+        days,
+        color: COLORS[name as keyof typeof COLORS] || "#94a3b8" // Default to slate-400
+      }))
+
+    const avgStayDuration = flights.length ? Math.round(totalDays / flights.length) : 0
+
+    return {
+      countryData,
+      totalFlights: flights.length,
+      avgStayDuration,
+      longestStay,
+      mostVisitedCountry,
+      totalDays
+    }
+  }, [flights])
+
+  // Tax threshold calculations
+  const maxDaysOutside = 183
+  const daysOutsideBaseCountry = stats.totalDays
+  const daysLeft = maxDaysOutside - daysOutsideBaseCountry
+  const percentageUsed = (daysOutsideBaseCountry / maxDaysOutside) * 100
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="text-muted-foreground">Loading statistics...</div>
+      </div>
+    )
+  }
+
+  if (!flights.length) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-semibold tracking-tight">Statistics</h2>
+          <BaseCountrySelector />
+        </div>
+
+        <Card className="p-8">
+          <CardHeader className="text-center">
+            <CardTitle>No Flight Data Available</CardTitle>
+            <CardDescription>
+              Add your first flight to start seeing your travel statistics and tax residency tracking.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -45,7 +139,7 @@ export function StatsOverview() {
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={dummyCountryData}
+                  data={stats.countryData}
                   dataKey="days"
                   nameKey="name"
                   cx="50%"
@@ -53,7 +147,7 @@ export function StatsOverview() {
                   outerRadius={100}
                   label={(entry) => `${entry.name} (${entry.days})`}
                 >
-                  {dummyCountryData.map((entry, index) => (
+                  {stats.countryData.map((entry, index) => (
                     <Cell 
                       key={`cell-${index}`} 
                       fill={entry.color}
@@ -83,7 +177,7 @@ export function StatsOverview() {
               <CardTitle>Total Flights</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-4xl font-bold">{totalFlights}</div>
+              <div className="text-4xl font-bold">{stats.totalFlights}</div>
               <p className="text-xs text-muted-foreground">
                 Flights tracked this year
               </p>
@@ -95,7 +189,7 @@ export function StatsOverview() {
               <CardTitle>Average Stay</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-4xl font-bold">{avgStayDuration}</div>
+              <div className="text-4xl font-bold">{stats.avgStayDuration}</div>
               <p className="text-xs text-muted-foreground">
                 Days per destination
               </p>
@@ -107,7 +201,7 @@ export function StatsOverview() {
               <CardTitle>Longest Stay</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-4xl font-bold">{longestStay}</div>
+              <div className="text-4xl font-bold">{stats.longestStay}</div>
               <p className="text-xs text-muted-foreground">
                 Days in one location
               </p>
@@ -119,7 +213,7 @@ export function StatsOverview() {
               <CardTitle>Most Visited</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold truncate">{mostVisitedCountry}</div>
+              <div className="text-2xl font-bold truncate">{stats.mostVisitedCountry}</div>
               <p className="text-xs text-muted-foreground">
                 Highest days count
               </p>

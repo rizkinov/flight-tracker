@@ -26,8 +26,10 @@ export function FlightList({ onFlightsChange }: FlightListProps) {
   const [loading, setLoading] = useState(true)
 
   const loadFlights = useCallback(async () => {
+    if (!user) return
+    
     try {
-      const userFlights = await getUserFlights(user!.uid)
+      const userFlights = await getUserFlights(user.uid)
       setFlights(userFlights)
       onFlightsChange?.(userFlights.length > 0)
       setLoading(false)
@@ -43,10 +45,8 @@ export function FlightList({ onFlightsChange }: FlightListProps) {
   }, [user, onFlightsChange, toast])
 
   useEffect(() => {
-    if (user) {
-      loadFlights()
-    }
-  }, [user, loadFlights])
+    loadFlights()
+  }, [loadFlights])
 
   const handleEdit = async (flight: Flight) => {
     try {
@@ -90,7 +90,11 @@ export function FlightList({ onFlightsChange }: FlightListProps) {
   }
 
   if (loading) {
-    return <div className="flex justify-center py-8">Loading...</div>
+    return <div className="flex justify-center py-8">Loading flights...</div>
+  }
+
+  if (!flights.length) {
+    return <div className="text-center py-8 text-muted-foreground">No flights found.</div>
   }
 
   return (

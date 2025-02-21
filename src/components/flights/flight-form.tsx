@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { useToast } from '@/components/ui/use-toast'
 import { Button } from '@/components/ui/button'
@@ -14,24 +15,55 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { useAuth } from '@/lib/auth-context'
+import { createFlight } from '@/lib/services/flights'
 
 interface FlightFormValues {
   flightNumber: string
   from: string
   to: string
   date: string
+  days: number
   notes: string
 }
 
 export function FlightForm() {
+  const { user } = useAuth()
   const { toast } = useToast()
-  const form = useForm<FlightFormValues>()
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const form = useForm<FlightFormValues>({
+    defaultValues: {
+      flightNumber: '',
+      from: '',
+      to: '',
+      date: '',
+      days: 1,
+      notes: '',
+    }
+  })
 
-  function onSubmit(data: FlightFormValues) {
-    toast({
-      title: "Flight added",
-      description: `Flight ${data.flightNumber} from ${data.from} to ${data.to} on ${data.date}`,
-    })
+  async function onSubmit(data: FlightFormValues) {
+    if (!user) return
+
+    setLoading(true)
+    try {
+      await createFlight(user.uid, data)
+      toast({
+        title: "Flight added",
+        description: `Flight ${data.flightNumber} from ${data.from} to ${data.to} on ${data.date}`,
+      })
+      router.push('/dashboard')
+    } catch (error) {
+      console.error('Error adding flight:', error)
+      toast({
+        title: "Error",
+        description: "Failed to add flight. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -91,6 +123,24 @@ export function FlightForm() {
         />
         <FormField
           control={form.control}
+          name="days"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Days in Destination</FormLabel>
+              <FormControl>
+                <Input 
+                  type="number" 
+                  min="1"
+                  {...field}
+                  onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
           name="notes"
           render={({ field }) => (
             <FormItem>
@@ -106,7 +156,9 @@ export function FlightForm() {
             </FormItem>
           )}
         />
-        <Button type="submit">Add Flight</Button>
+        <Button type="submit" disabled={loading}>
+          {loading ? "Adding..." : "Add Flight"}
+        </Button>
       </form>
     </Form>
   )

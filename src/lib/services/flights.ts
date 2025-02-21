@@ -21,6 +21,7 @@ export interface Flight {
   from: string
   to: string
   notes?: string
+  days: number
   createdAt: Timestamp
   updatedAt: Timestamp
 }
@@ -31,6 +32,7 @@ export interface CreateFlightData {
   from: string
   to: string
   notes?: string
+  days: number
 }
 
 export interface UpdateFlightData {
@@ -39,6 +41,7 @@ export interface UpdateFlightData {
   from?: string
   to?: string
   notes?: string
+  days?: number
 }
 
 export async function createFlight(userId: string, data: CreateFlightData) {
