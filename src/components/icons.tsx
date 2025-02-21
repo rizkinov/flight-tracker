@@ -3,6 +3,7 @@ import {
   SunMedium,
   Twitter,
   LucideIcon,
+  LucideProps,
 } from "lucide-react"
 
 export type Icon = LucideIcon

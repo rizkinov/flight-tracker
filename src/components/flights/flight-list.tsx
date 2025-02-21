@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import {
   Table,
   TableBody,
@@ -25,13 +25,7 @@ export function FlightList({ onFlightsChange }: FlightListProps) {
   const [flights, setFlights] = useState<Flight[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (user) {
-      loadFlights()
-    }
-  }, [user])
-
-  const loadFlights = async () => {
+  const loadFlights = useCallback(async () => {
     try {
       const userFlights = await getUserFlights(user!.uid)
       setFlights(userFlights)
@@ -46,7 +40,13 @@ export function FlightList({ onFlightsChange }: FlightListProps) {
       })
       setLoading(false)
     }
-  }
+  }, [user, onFlightsChange, toast])
+
+  useEffect(() => {
+    if (user) {
+      loadFlights()
+    }
+  }, [user, loadFlights])
 
   const handleEdit = async (flight: Flight) => {
     try {
