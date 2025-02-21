@@ -14,7 +14,7 @@ export function EmptyState() {
         </p>
         
         <Button asChild>
-          <Link href="/add">
+          <Link href="/flights">
             Add Your First Flight
           </Link>
         </Button>

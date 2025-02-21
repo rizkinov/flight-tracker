@@ -108,12 +108,12 @@ export default function DashboardPage() {
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
-                <Link href="/flights">
-                  <Button>
+                <Button asChild>
+                  <Link href="/flights">
                     <Plus className="mr-2 h-4 w-4" />
                     Add Flight
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </div>
             </div>
             <FlightList onFlightsChange={setHasFlights} />
