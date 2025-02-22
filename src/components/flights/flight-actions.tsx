@@ -287,7 +287,7 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
     const { user } = useAuth()
     const { toast } = useToast()
     const [loading, setLoading] = useState(false)
-    const [dateRange, setDateRange] = useState<DateRange>({
+    const [dateRange, setDateRange] = useState<DateRange | undefined>({
       from: new Date(flight.date),
       to: addDays(new Date(flight.date), flight.days - 1)
     })
@@ -328,14 +328,14 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
       const subscription = form.watch((value, { name }) => {
         if (name === 'days') {
           const days = value.days as number
-          if (days && days > 0 && dateRange.from) {
+          if (days && days > 0 && dateRange?.from) {
             const newEndDate = addDays(dateRange.from, days - 1)
-            setDateRange(prev => ({ ...prev, to: newEndDate }))
+            setDateRange({ from: dateRange.from, to: newEndDate })
           }
         }
       })
       return () => subscription.unsubscribe()
-    }, [form, dateRange.from])
+    }, [form, dateRange?.from])
 
     async function onSubmit(data: FlightFormValues) {
       if (!user) return
@@ -432,22 +432,22 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
                       <FormLabel>Travel Period</FormLabel>
                       <FormControl>
                         <div className="w-full">
-                        <DateRangePicker
-                  date={flight.dateRange}
-                  onDateChange={(range) => {
-                    setFlights(flights.map(f => {
-                      if (f.id === flight.id) {
-                        return {
-                          ...f,
-                          dateRange: range,
-                          date: range?.from ? format(range.from, 'yyyy-MM-dd') : '',
-                          days: range?.from && range?.to ? differenceInDays(range.to, range.from) + 1 : 1
-                        }
-                      }
-                      return f
-                    }))
-                  }}
-                />
+                          <DateRangePicker
+                            date={dateRange}
+                            onDateChange={(range) => {
+                              setDateRange(range)
+                              if (range?.from) {
+                                field.onChange(format(range.from, 'yyyy-MM-dd'))
+                                const days = range.to ? 
+                                  differenceInDays(range.to, range.from) + 1 : 
+                                  1
+                                form.setValue('days', days)
+                              } else {
+                                field.onChange('')
+                                form.setValue('days', 1)
+                              }
+                            }}
+                          />
                         </div>
                       </FormControl>
                       <FormMessage />

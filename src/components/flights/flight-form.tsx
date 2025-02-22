@@ -412,22 +412,22 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
                     <FormLabel>Travel Period</FormLabel>
                     <FormControl>
                       <div className="w-full">
-                      <DateRangePicker
-                  date={flight.dateRange}
-                  onDateChange={(range) => {
-                    setFlights(flights.map(f => {
-                      if (f.id === flight.id) {
-                        return {
-                          ...f,
-                          dateRange: range,
-                          date: range?.from ? format(range.from, 'yyyy-MM-dd') : '',
-                          days: range?.from && range?.to ? differenceInDays(range.to, range.from) + 1 : 1
-                        }
-                      }
-                      return f
-                    }))
-                  }}
-                />
+                        <DateRangePicker
+                          date={dateRange}
+                          onDateChange={(range) => {
+                            setDateRange(range)
+                            if (range?.from) {
+                              field.onChange(format(range.from, 'yyyy-MM-dd'))
+                              const days = range.to ? 
+                                differenceInDays(range.to, range.from) + 1 : 
+                                1
+                              form.setValue('days', days)
+                            } else {
+                              field.onChange('')
+                              form.setValue('days', 1)
+                            }
+                          }}
+                        />
                       </div>
                     </FormControl>
                     <FormMessage />
