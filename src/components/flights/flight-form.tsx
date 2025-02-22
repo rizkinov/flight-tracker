@@ -413,8 +413,8 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
                     <FormControl>
                       <div className="w-full">
                         <DateRangePicker
-                          date={dateRange}
-                          onDateChange={(range) => {
+                          selected={dateRange}
+                          onSelect={(range) => {
                             setDateRange(range)
                             if (range?.from) {
                               field.onChange(format(range.from, 'yyyy-MM-dd'))

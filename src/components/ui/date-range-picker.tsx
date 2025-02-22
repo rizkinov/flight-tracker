@@ -16,34 +16,36 @@ import {
 
 export function DateRangePicker({
   className,
-  date,
-  onDateChange,
+  selected,
+  onSelect,
 }: {
   className?: string
-  date?: DateRange
-  onDateChange: (date: DateRange | undefined) => void
+  selected?: DateRange
+  onSelect: (date: DateRange | undefined) => void
 }) {
+  const [open, setOpen] = React.useState(false)
+
   return (
     <div className={cn("grid gap-2", className)}>
-      <Popover>
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             id="date"
             variant={"outline"}
             className={cn(
               "w-full justify-start text-left font-normal",
-              !date && "text-muted-foreground"
+              !selected && "text-muted-foreground"
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {date?.from ? (
-              date.to ? (
+            {selected?.from ? (
+              selected.to ? (
                 <>
-                  {format(date.from, "LLL dd, y")} -{" "}
-                  {format(date.to, "LLL dd, y")}
+                  {format(selected.from, "LLL dd, y")} -{" "}
+                  {format(selected.to, "LLL dd, y")}
                 </>
               ) : (
-                format(date.from, "LLL dd, y")
+                format(selected.from, "LLL dd, y")
               )
             ) : (
               <span>Pick travel period</span>
@@ -54,9 +56,9 @@ export function DateRangePicker({
           <Calendar
             initialFocus
             mode="range"
-            defaultMonth={date?.from}
-            selected={date}
-            onSelect={onDateChange}
+            defaultMonth={selected?.from}
+            selected={selected}
+            onSelect={onSelect}
             numberOfMonths={2}
           />
         </PopoverContent>
