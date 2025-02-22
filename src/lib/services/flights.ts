@@ -24,6 +24,7 @@ export interface Flight {
   days: number
   createdAt: Timestamp
   updatedAt: Timestamp
+  expiresAt?: Timestamp
 }
 
 export interface CreateFlightData {
@@ -44,14 +45,18 @@ export interface UpdateFlightData {
   days?: number
 }
 
-export async function createFlight(userId: string, data: CreateFlightData) {
-  console.log('Creating flight in Firebase:', { userId, data })
+export async function createFlight(userId: string, data: CreateFlightData, isAnonymous: boolean = false) {
+  console.log('Creating flight in Firebase:', { userId, data, isAnonymous })
   try {
     const flightData = {
       userId,
       ...data,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
+      // Add expiration for anonymous users (24 hours from now)
+      ...(isAnonymous && {
+        expiresAt: Timestamp.fromDate(new Date(Date.now() + 24 * 60 * 60 * 1000))
+      })
     }
     console.log('Prepared flight data:', flightData)
     
@@ -65,12 +70,16 @@ export async function createFlight(userId: string, data: CreateFlightData) {
   }
 }
 
-export async function updateFlight(flightId: string, data: UpdateFlightData) {
+export async function updateFlight(flightId: string, data: UpdateFlightData, isAnonymous: boolean = false) {
   try {
     const flightRef = doc(db, 'flights', flightId)
     await updateDoc(flightRef, {
       ...data,
       updatedAt: Timestamp.now(),
+      // Extend expiration for anonymous users
+      ...(isAnonymous && {
+        expiresAt: Timestamp.fromDate(new Date(Date.now() + 24 * 60 * 60 * 1000))
+      })
     })
   } catch (error) {
     console.error('Error updating flight:', error)

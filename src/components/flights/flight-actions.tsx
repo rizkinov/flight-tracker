@@ -295,7 +295,7 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
 
       setLoading(true)
       try {
-        await updateFlight(flight.id, data)
+        await updateFlight(flight.id, data, user.isAnonymous)
         toast({
           title: "Flight updated",
           description: `Flight ${data.flightNumber} has been updated.`,

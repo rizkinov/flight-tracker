@@ -272,7 +272,7 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
     setLoading(true)
     try {
       console.log('Attempting to create flight in Firebase...')
-      const result = await createFlight(user.uid, data)
+      const result = await createFlight(user.uid, data, user.isAnonymous)
       console.log('Flight created successfully', result)
       
       toast({

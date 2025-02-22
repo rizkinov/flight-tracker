@@ -174,7 +174,7 @@ export default function FlightsPage() {
           to: flight.to,
           days: flight.days,
           notes: flight.notes
-        })
+        }, user.isAnonymous)
       ))
 
       toast({

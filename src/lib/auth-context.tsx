@@ -9,6 +9,7 @@ import {
   signOut as firebaseSignOut,
   browserLocalPersistence,
   setPersistence,
+  signInAnonymously,
   inMemoryPersistence
 } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
@@ -19,19 +20,24 @@ interface AuthContextType {
   user: User | null
   loading: boolean
   signIn: () => Promise<void>
+  signInAsGuest: () => Promise<void>
   signOut: () => Promise<void>
+  isAnonymous: boolean
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   signIn: async () => {},
+  signInAsGuest: async () => {},
   signOut: async () => {},
+  isAnonymous: false
 })
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isAnonymous, setIsAnonymous] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
 
@@ -43,10 +49,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user: user ? {
           uid: user.uid,
           email: user.email,
-          displayName: user.displayName
+          displayName: user.displayName,
+          isAnonymous: user.isAnonymous
         } : 'No user'
       })
       setUser(user)
+      setIsAnonymous(user?.isAnonymous || false)
       setLoading(false)
 
       // Handle routing based on auth state
@@ -90,6 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
       
       setUser(result.user)
+      setIsAnonymous(false)
       toast({
         title: "Welcome!",
         description: "You have successfully signed in.",
@@ -109,12 +118,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const signInAsGuest = async () => {
+    try {
+      console.log('Starting anonymous sign in...')
+      await setPersistence(auth, browserLocalPersistence)
+      const result = await signInAnonymously(auth)
+      console.log('Anonymous sign in successful:', {
+        user: {
+          uid: result.user.uid,
+          isAnonymous: result.user.isAnonymous
+        }
+      })
+      setUser(result.user)
+      setIsAnonymous(true)
+      toast({
+        title: "Welcome, Guest!",
+        description: "Your data will be available for 24 hours.",
+      })
+      router.push('/dashboard')
+    } catch (error: any) {
+      console.error('Error during anonymous sign in:', error)
+      toast({
+        title: "Error",
+        description: error.message || "Failed to start guest session. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
   const signOut = async () => {
     try {
       console.log('Starting sign out process...')
       await firebaseSignOut(auth)
       console.log('Successfully signed out')
       setUser(null)
+      setIsAnonymous(false)
       toast({
         title: "Signed out",
         description: "You have been successfully signed out.",
@@ -131,7 +169,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signInAsGuest, signOut, isAnonymous }}>
       {children}
     </AuthContext.Provider>
   )
