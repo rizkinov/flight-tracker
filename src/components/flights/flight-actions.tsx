@@ -282,9 +282,10 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
     const router = useRouter()
     const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
       if (flight.date) {
+        const startDate = new Date(flight.date)
         return {
-          from: new Date(flight.date),
-          to: addDays(new Date(flight.date), flight.days - 1)
+          from: startDate,
+          to: addDays(startDate, flight.days - 1)
         }
       }
       return undefined
@@ -323,6 +324,7 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
     // Update days when date range changes
     useEffect(() => {
       if (dateRange?.from && dateRange?.to) {
+        // Add 1 to include both start and end dates
         const days = differenceInDays(dateRange.to, dateRange.from) + 1
         form.setValue('days', days)
         form.setValue('date', format(dateRange.from, 'yyyy-MM-dd'))
@@ -337,6 +339,7 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
           if (days && days > 0) {
             setDateRange({
               from: dateRange.from,
+              // Subtract 1 from days since addDays is inclusive
               to: addDays(dateRange.from, days - 1)
             })
           }
@@ -426,6 +429,7 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
                     if (range?.from) {
                       form.setValue('date', format(range.from, 'yyyy-MM-dd'))
                       if (range.to) {
+                        // Add 1 to include both start and end dates
                         const days = differenceInDays(range.to, range.from) + 1
                         form.setValue('days', days)
                       }
