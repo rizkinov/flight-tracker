@@ -403,17 +403,19 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Travel Period</FormLabel>
-                    <DateRangePicker
-                      date={dateRange}
-                      onDateChange={(range) => {
-                        if (range?.from && range?.to) {
-                          const days = differenceInDays(range.to, range.from) + 1
-                          setDateRange(range)
-                          field.onChange(format(range.from, 'yyyy-MM-dd'))
-                          form.setValue('days', days)
-                        }
-                      }}
-                    />
+                    <FormControl>
+                      <DateRangePicker
+                        date={dateRange}
+                        onDateChange={(range) => {
+                          if (range?.from && range?.to) {
+                            const days = differenceInDays(range.to, range.from) + 1
+                            setDateRange(range)
+                            field.onChange(format(range.from, 'yyyy-MM-dd'))
+                            form.setValue('days', days)
+                          }
+                        }}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

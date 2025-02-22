@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { addDays, format } from "date-fns"
+import { format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
 import { DateRange } from "react-day-picker"
 
@@ -25,19 +25,17 @@ export function DateRangePicker({
   date,
   onDateChange,
 }: DateRangePickerProps) {
-  const formatDisplayDate = (date: Date) => {
-    return format(date, "MMM d")
-  }
+  const [open, setOpen] = React.useState(false)
 
   return (
     <div className={cn("grid gap-2", className)}>
-      <Popover>
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             id="date"
             variant={"outline"}
             className={cn(
-              "w-[300px] justify-start text-left font-normal",
+              "w-full justify-start text-left font-normal",
               !date && "text-muted-foreground"
             )}
           >
@@ -45,17 +43,17 @@ export function DateRangePicker({
             {date?.from ? (
               date.to ? (
                 <>
-                  {formatDisplayDate(date.from)} - {formatDisplayDate(date.to)}
+                  {format(date.from, "MMM d")} - {format(date.to, "MMM d")}
                 </>
               ) : (
-                formatDisplayDate(date.from)
+                format(date.from, "MMM d")
               )
             ) : (
               <span>Pick a date</span>
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent className="w-auto flex flex-col space-y-4 p-3" align="start">
           <Calendar
             initialFocus
             mode="range"
@@ -63,10 +61,10 @@ export function DateRangePicker({
             selected={date}
             onSelect={onDateChange}
             numberOfMonths={2}
-            formatters={{
-              formatCaption: (date, options) => format(date, "MMMM yyyy")
-            }}
           />
+          <div className="flex justify-end border-t pt-3">
+            <Button onClick={() => setOpen(false)}>Done</Button>
+          </div>
         </PopoverContent>
       </Popover>
     </div>

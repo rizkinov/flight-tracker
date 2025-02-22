@@ -351,17 +351,19 @@ export default function FlightsPage() {
                 value={flight.flightNumber}
                 onChange={(e) => updateFlight(flight.id, 'flightNumber', e.target.value)}
               />
-              <DateRangePicker
-                date={dateRange}
-                onDateChange={(range) => {
-                  if (range?.from && range?.to) {
-                    const days = differenceInDays(range.to, range.from) + 1
-                    setDateRange(range)
-                    updateFlight(flight.id, 'date', format(range.from, 'yyyy-MM-dd'))
-                    updateFlight(flight.id, 'days', days)
-                  }
-                }}
-              />
+              <div className="w-full">
+                <DateRangePicker
+                  date={dateRange}
+                  onDateChange={(range) => {
+                    if (range?.from && range?.to) {
+                      const days = differenceInDays(range.to, range.from) + 1
+                      setDateRange(range)
+                      updateFlight(flight.id, 'date', format(range.from, 'yyyy-MM-dd'))
+                      updateFlight(flight.id, 'days', days)
+                    }
+                  }}
+                />
+              </div>
               <CountrySelect
                 value={flight.from}
                 onChange={(value) => updateFlight(flight.id, 'from', value)}
