@@ -359,9 +359,9 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
               name="flightNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Flight Number</FormLabel>
+                  <FormLabel htmlFor="add-flight-number">Flight Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. SQ123" {...field} />
+                    <Input id="add-flight-number" placeholder="e.g. SQ123" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -372,7 +372,7 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
               name="from"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>From</FormLabel>
+                  <FormLabel htmlFor="add-from">From</FormLabel>
                   <FormControl>
                     <CountrySelect
                       value={field.value}
@@ -390,7 +390,7 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
               name="to"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>To</FormLabel>
+                  <FormLabel htmlFor="add-to">To</FormLabel>
                   <FormControl>
                     <CountrySelect
                       value={field.value}
@@ -409,7 +409,7 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
                 name="date"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Travel Period</FormLabel>
+                    <FormLabel htmlFor="add-date">Travel Period</FormLabel>
                     <FormControl>
                       <div className="w-full">
                         <DateRangePicker
@@ -439,9 +439,10 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
                 name="days"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Days in Destination</FormLabel>
+                    <FormLabel htmlFor="add-days">Days in Destination</FormLabel>
                     <FormControl>
                       <Input 
+                        id="add-days"
                         type="number" 
                         min="1"
                         {...field}
@@ -463,9 +464,10 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notes</FormLabel>
+                  <FormLabel htmlFor="add-notes">Notes</FormLabel>
                   <FormControl>
                     <Textarea 
+                      id="add-notes"
                       placeholder="Add any additional notes about your flight"
                       className="min-h-[100px]"
                       {...field}

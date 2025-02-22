@@ -379,9 +379,9 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
                 name="flightNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Flight Number</FormLabel>
+                    <FormLabel htmlFor="edit-flight-number">Flight Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. SQ123" {...field} />
+                      <Input id="edit-flight-number" placeholder="e.g. SQ123" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -392,7 +392,7 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
                 name="from"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>From</FormLabel>
+                    <FormLabel htmlFor="edit-from">From</FormLabel>
                     <FormControl>
                       <CountrySelect
                         value={field.value}
@@ -410,7 +410,7 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
                 name="to"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>To</FormLabel>
+                    <FormLabel htmlFor="edit-to">To</FormLabel>
                     <FormControl>
                       <CountrySelect
                         value={field.value}
@@ -429,7 +429,7 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
                   name="date"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Travel Period</FormLabel>
+                      <FormLabel htmlFor="edit-date">Travel Period</FormLabel>
                       <FormControl>
                         <div className="w-full">
                           <DateRangePicker
@@ -459,9 +459,10 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
                   name="days"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Days in Destination</FormLabel>
+                      <FormLabel htmlFor="edit-days">Days in Destination</FormLabel>
                       <FormControl>
                         <Input 
+                          id="edit-days"
                           type="number" 
                           min="1"
                           {...field}
@@ -483,9 +484,10 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
                 name="notes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Notes</FormLabel>
+                    <FormLabel htmlFor="edit-notes">Notes</FormLabel>
                     <FormControl>
                       <Textarea 
+                        id="edit-notes"
                         placeholder="Add any additional notes about your flight"
                         className="min-h-[100px]"
                         {...field}
