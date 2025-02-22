@@ -317,15 +317,20 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
         })
         
         setDateRange({ from: startDate, to: endDate })
+      } else {
+        // Reset date range when dialog closes
+        setDateRange(undefined)
       }
     }, [open, flight, form])
 
-    // Update days when date range changes
+    // Update form values when date range changes
     useEffect(() => {
-      if (dateRange?.from && dateRange?.to) {
-        const days = differenceInDays(dateRange.to, dateRange.from) + 1
-        form.setValue('days', days)
+      if (dateRange?.from) {
         form.setValue('date', format(dateRange.from, 'yyyy-MM-dd'))
+        if (dateRange.to) {
+          const days = differenceInDays(dateRange.to, dateRange.from) + 1
+          form.setValue('days', days)
+        }
       }
     }, [dateRange, form])
 
@@ -335,10 +340,8 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
         if (name === 'days' && dateRange?.from) {
           const days = value.days as number
           if (days && days > 0) {
-            setDateRange({
-              from: dateRange.from,
-              to: addDays(dateRange.from, days - 1)
-            })
+            const endDate = addDays(dateRange.from, days - 1)
+            setDateRange({ from: dateRange.from, to: endDate })
           }
         }
       })
@@ -442,14 +445,12 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
                         <DateRangePicker
                           date={dateRange}
                           onDateChange={(range) => {
-                            setDateRange(range)
                             if (range?.from) {
-                              field.onChange(format(range.from, 'yyyy-MM-dd'))
-                              if (range.to) {
-                                const days = differenceInDays(range.to, range.from) + 1
-                                form.setValue('days', days)
-                              }
+                              const startDate = range.from
+                              const endDate = range.to || startDate
+                              setDateRange({ from: startDate, to: endDate })
                             } else {
+                              setDateRange(undefined)
                               field.onChange('')
                               form.setValue('days', 1)
                             }

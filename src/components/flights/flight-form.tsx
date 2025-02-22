@@ -136,6 +136,22 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
     }
   })
 
+  // Reset form and date range when dialog opens/closes
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        flightNumber: "",
+        date: "",
+        from: "Singapore",
+        to: "",
+        days: 1,
+        notes: ""
+      })
+      setDateRange(undefined)
+      setUsedCountries(new Set(["Singapore"]))
+    }
+  }, [open, form])
+
   // Update days when date range changes
   useEffect(() => {
     if (dateRange?.from && dateRange?.to) {
@@ -291,18 +307,11 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
   }
 
   async function onSubmit(data: FlightFormValues) {
-    console.log('Form submission started', { data, user: user?.uid })
-    
-    if (!user) {
-      console.error('No user found during submission')
-      return
-    }
+    if (!user) return
 
     setLoading(true)
     try {
-      console.log('Attempting to create flight in Firebase...')
-      const result = await createFlight(user.uid, data, user.isAnonymous)
-      console.log('Flight created successfully', result)
+      await createFlight(user.uid, data, user.isAnonymous)
       
       toast({
         title: "Flight added",
@@ -310,11 +319,12 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
       })
       
       form.reset()
+      setDateRange(undefined)
       setUsedCountries(new Set())
       onOpenChange(false)
       onSuccess?.()
     } catch (error) {
-      console.error('Detailed error adding flight:', error)
+      console.error('Error adding flight:', error)
       toast({
         title: "Error",
         description: "Failed to add flight. Please try again.",
