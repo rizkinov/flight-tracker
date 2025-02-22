@@ -25,23 +25,34 @@ export function DateRangePicker({
 }) {
   const [open, setOpen] = React.useState(false)
 
-  // Handle day selection with proper clearing behavior
-  const handleSelect = (range: DateRange | undefined) => {
-    // If a range is already selected and user clicks the start date, clear the selection
-    if (selected?.from && range?.from && 
-        selected.from.getTime() === range.from.getTime() && 
-        (!range.to || range.to.getTime() === range.from.getTime())) {
+  // Handle individual day clicks for better control
+  const handleDayClick = (day: Date) => {
+    if (!selected?.from) {
+      // No current selection - start new range
+      onSelect({ from: day, to: undefined })
+      return
+    }
+
+    if (day.getTime() === selected.from.getTime()) {
+      // Clicking the start date - clear selection
       onSelect(undefined)
       return
     }
 
-    // If user selects a date earlier than current start date, reset and start new selection
-    if (selected?.from && range?.from && range.from < selected.from) {
-      onSelect({ from: range.from, to: undefined })
+    if (day < selected.from) {
+      // Clicking earlier date - start new range
+      onSelect({ from: day, to: undefined })
       return
     }
 
-    onSelect(range)
+    if (!selected.to) {
+      // Selecting end date
+      onSelect({ from: selected.from, to: day })
+      return
+    }
+
+    // If we have a complete range, start a new one
+    onSelect({ from: day, to: undefined })
   }
 
   return (
@@ -77,8 +88,9 @@ export function DateRangePicker({
             mode="range"
             defaultMonth={selected?.from}
             selected={selected}
-            onSelect={handleSelect}
+            onDayClick={handleDayClick}
             numberOfMonths={2}
+            disabled={(date) => date < new Date('1900-01-01')}
           />
           <div className="flex items-center justify-end gap-2 p-3 border-t">
             <Button
