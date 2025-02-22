@@ -15,6 +15,10 @@ import {
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import Image from 'next/image'
+import { FlightCalendar } from "@/components/flights/flight-calendar"
+import { DateRange } from "react-day-picker"
+import { format, addDays, differenceInDays } from "date-fns"
+import { CalendarIcon } from "lucide-react"
 
 // Define a list of colors for entries
 const entryColors = [
@@ -60,6 +64,10 @@ export default function FlightsPage() {
   const [usedCountries, setUsedCountries] = useState<Set<string>>(new Set())
   const [countries, setCountries] = useState<Country[]>([])
   const [loadingCountries, setLoadingCountries] = useState(true)
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: new Date(),
+    to: addDays(new Date(), 1)
+  })
 
   // Fetch countries from REST Countries API
   useEffect(() => {
@@ -328,7 +336,7 @@ export default function FlightsPage() {
         <div className="p-4">
           <div className="grid grid-cols-[2fr_2fr_2fr_2fr_1fr_50px] gap-4 font-medium">
             <div>Flight Number</div>
-            <div>Date</div>
+            <div>Travel Period</div>
             <div>From</div>
             <div>To</div>
             <div>Days</div>
@@ -344,11 +352,47 @@ export default function FlightsPage() {
                 value={flight.flightNumber}
                 onChange={(e) => updateFlight(flight.id, 'flightNumber', e.target.value)}
               />
-              <Input
-                type="date"
-                value={flight.date}
-                onChange={(e) => updateFlight(flight.id, 'date', e.target.value)}
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full pl-3 text-left font-normal",
+                      !dateRange && "text-muted-foreground"
+                    )}
+                  >
+                    {dateRange?.from ? (
+                      dateRange.to ? (
+                        <>
+                          {format(dateRange.from, "LLL dd, y")} -{" "}
+                          {format(dateRange.to, "LLL dd, y")}
+                        </>
+                      ) : (
+                        format(dateRange.from, "LLL dd, y")
+                      )
+                    ) : (
+                      <span>Select travel dates</span>
+                    )}
+                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <FlightCalendar
+                    initialFocus
+                    defaultMonth={dateRange?.from}
+                    dateRange={dateRange}
+                    onSelect={(range) => {
+                      if (range?.from && range?.to) {
+                        const days = differenceInDays(range.to, range.from) + 1
+                        setDateRange(range)
+                        updateFlight(flight.id, 'date', format(range.from, 'yyyy-MM-dd'))
+                        updateFlight(flight.id, 'days', days)
+                      }
+                    }}
+                    numberOfMonths={2}
+                  />
+                </PopoverContent>
+              </Popover>
               <CountrySelect
                 value={flight.from}
                 onChange={(value) => updateFlight(flight.id, 'from', value)}

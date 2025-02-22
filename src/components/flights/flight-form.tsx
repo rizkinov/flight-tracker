@@ -44,7 +44,7 @@ import {
 import Image from 'next/image'
 import { DateRange } from 'react-day-picker'
 import { format, addDays, differenceInDays } from 'date-fns'
-import { Calendar } from "@/components/ui/calendar"
+import { FlightCalendar } from "./flight-calendar"
 
 interface Country {
   name: {
@@ -96,7 +96,7 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
   const [loadingCountries, setLoadingCountries] = useState(true)
   const [usedCountries, setUsedCountries] = useState<Set<string>>(new Set())
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+  const [dateRange, setDateRange] = useState<DateRange>({
     from: new Date(),
     to: addDays(new Date(), 1)
   })
@@ -402,7 +402,7 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
                 name="date"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Date Range</FormLabel>
+                    <FormLabel>Travel Period</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -423,19 +423,20 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
                                 format(dateRange.from, "LLL dd, y")
                               )
                             ) : (
-                              <span>Pick a date range</span>
+                              <span>Select travel dates</span>
                             )}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
+                        <FlightCalendar
                           initialFocus
-                          mode="range"
                           defaultMonth={dateRange?.from}
-                          selected={dateRange}
-                          onSelect={setDateRange}
+                          dateRange={dateRange}
+                          onSelect={(range) => {
+                            setDateRange(range || { from: new Date(), to: addDays(new Date(), 1) })
+                          }}
                           numberOfMonths={2}
                         />
                       </PopoverContent>
