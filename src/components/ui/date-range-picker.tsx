@@ -3,7 +3,7 @@
 import * as React from "react"
 import { CalendarIcon } from "lucide-react"
 import { addDays, format } from "date-fns"
-import { DateRange, DayPicker } from "react-day-picker"
+import { DateRange } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -24,36 +24,6 @@ export function DateRangePicker({
   onSelect: (date: DateRange | undefined) => void
 }) {
   const [open, setOpen] = React.useState(false)
-
-  // Handle individual day clicks for better control
-  const handleDayClick = (day: Date) => {
-    if (!selected?.from) {
-      // No current selection - start new range
-      onSelect({ from: day, to: undefined })
-      return
-    }
-
-    if (day.getTime() === selected.from.getTime()) {
-      // Clicking the start date - clear selection
-      onSelect(undefined)
-      return
-    }
-
-    if (day < selected.from) {
-      // Clicking earlier date - start new range
-      onSelect({ from: day, to: undefined })
-      return
-    }
-
-    if (!selected.to) {
-      // Selecting end date
-      onSelect({ from: selected.from, to: day })
-      return
-    }
-
-    // If we have a complete range, start a new one
-    onSelect({ from: day, to: undefined })
-  }
 
   return (
     <div className={cn("grid gap-2", className)}>
@@ -88,7 +58,7 @@ export function DateRangePicker({
             mode="range"
             defaultMonth={selected?.from}
             selected={selected}
-            onDayClick={handleDayClick}
+            onSelect={onSelect}
             numberOfMonths={2}
             disabled={(date) => date < new Date('1900-01-01')}
           />
