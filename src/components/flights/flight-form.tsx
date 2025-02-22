@@ -411,22 +411,26 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
                   <FormItem className="flex flex-col">
                     <FormLabel>Travel Period</FormLabel>
                     <FormControl>
-                      <DateRangePicker
-                        date={dateRange}
-                        onDateChange={(range) => {
-                          setDateRange(range)
-                          if (range?.from) {
-                            field.onChange(format(range.from, 'yyyy-MM-dd'))
-                            if (range.to) {
-                              const days = differenceInDays(range.to, range.from) + 1
-                              form.setValue('days', days)
+                      <div className="w-full">
+                        <DateRangePicker
+                          date={dateRange}
+                          onDateChange={(range) => {
+                            if (!range?.from) return
+
+                            // Always ensure a complete range
+                            const newRange = {
+                              from: range.from,
+                              to: range.to || range.from
                             }
-                          } else {
-                            field.onChange('')
-                            form.setValue('days', 1)
-                          }
-                        }}
-                      />
+                            setDateRange(newRange)
+
+                            // Update form values based on the complete range
+                            field.onChange(format(newRange.from, 'yyyy-MM-dd'))
+                            const days = differenceInDays(newRange.to, newRange.from) + 1
+                            form.setValue('days', days)
+                          }}
+                        />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

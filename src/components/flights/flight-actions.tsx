@@ -431,24 +431,26 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
                     <FormItem className="flex flex-col">
                       <FormLabel>Travel Period</FormLabel>
                       <FormControl>
-                        <DateRangePicker
-                          date={dateRange}
-                          onDateChange={(range) => {
-                            if (!range?.from) return
+                        <div className="w-full">
+                          <DateRangePicker
+                            date={dateRange}
+                            onDateChange={(range) => {
+                              if (!range?.from) return
 
-                            // Always ensure a complete range
-                            const newRange = {
-                              from: range.from,
-                              to: range.to || range.from
-                            }
-                            setDateRange(newRange)
+                              // Always ensure a complete range
+                              const newRange = {
+                                from: range.from,
+                                to: range.to || range.from
+                              }
+                              setDateRange(newRange)
 
-                            // Update form values based on the complete range
-                            field.onChange(format(newRange.from, 'yyyy-MM-dd'))
-                            const days = differenceInDays(newRange.to, newRange.from) + 1
-                            form.setValue('days', days)
-                          }}
-                        />
+                              // Update form values based on the complete range
+                              field.onChange(format(newRange.from, 'yyyy-MM-dd'))
+                              const days = differenceInDays(newRange.to, newRange.from) + 1
+                              form.setValue('days', days)
+                            }}
+                          />
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
