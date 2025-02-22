@@ -58,7 +58,18 @@ export function DateRangePicker({
             mode="range"
             defaultMonth={date?.from}
             selected={date}
-            onSelect={onDateChange}
+            onSelect={(range) => {
+              if (range?.from) {
+                // If only start date is selected
+                if (!range.to) {
+                  onDateChange({ from: range.from, to: range.from })
+                } else {
+                  onDateChange(range)
+                }
+              } else {
+                onDateChange(undefined)
+              }
+            }}
             numberOfMonths={2}
           />
           <div className="flex items-center justify-end gap-2 p-3 border-t">
