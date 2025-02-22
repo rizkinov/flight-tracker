@@ -449,6 +449,7 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
                               const days = differenceInDays(newRange.to, newRange.from) + 1
                               form.setValue('days', days)
                             }}
+                            allowReset={true}
                           />
                         </div>
                       </FormControl>

@@ -18,10 +18,12 @@ export function DateRangePicker({
   className,
   date,
   onDateChange,
+  allowReset = false,
 }: {
   className?: string
   date?: DateRange
   onDateChange: (date: DateRange | undefined) => void
+  allowReset?: boolean
 }) {
   const [open, setOpen] = React.useState(false)
 
@@ -65,16 +67,22 @@ export function DateRangePicker({
                 return
               }
 
-              // If clicking on a date that matches the current start date, reset
-              if (date?.from && newRange.from && 
+              // Only allow reset behavior if allowReset is true (single flight forms)
+              if (allowReset && date?.from && newRange.from && 
                   date.from.getTime() === newRange.from.getTime()) {
                 onDateChange(undefined)
                 return
               }
 
-              // For a new single date selection, set both start and end to that date
+              // For a new single date selection
               if (newRange.from && !newRange.to) {
-                onDateChange({ from: newRange.from, to: newRange.from })
+                // In batch mode, just set the from date
+                if (!allowReset) {
+                  onDateChange({ from: newRange.from, to: undefined })
+                } else {
+                  // In single flight mode, set both dates to the same day
+                  onDateChange({ from: newRange.from, to: newRange.from })
+                }
                 return
               }
 
