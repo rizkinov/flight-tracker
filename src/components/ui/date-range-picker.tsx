@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { format } from "date-fns"
+import { addDays, format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
 import { DateRange } from "react-day-picker"
 
@@ -18,14 +18,12 @@ interface DateRangePickerProps {
   className?: string
   date?: DateRange
   onDateChange: (date: DateRange | undefined) => void
-  align?: "start" | "center" | "end"
 }
 
 export function DateRangePicker({
   className,
   date,
   onDateChange,
-  align = "start",
 }: DateRangePickerProps) {
   return (
     <div className={cn("grid gap-2", className)}>
@@ -35,7 +33,7 @@ export function DateRangePicker({
             id="date"
             variant={"outline"}
             className={cn(
-              "w-full justify-start text-left font-normal",
+              "w-[300px] justify-start text-left font-normal",
               !date && "text-muted-foreground"
             )}
           >
@@ -43,17 +41,18 @@ export function DateRangePicker({
             {date?.from ? (
               date.to ? (
                 <>
-                  {format(date.from, "MMM d")} - {format(date.to, "MMM d")}
+                  {format(date.from, "LLL dd, y")} -{" "}
+                  {format(date.to, "LLL dd, y")}
                 </>
               ) : (
-                format(date.from, "MMM d")
+                format(date.from, "LLL dd, y")
               )
             ) : (
               <span>Pick a date</span>
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align={align}>
+        <PopoverContent className="w-auto p-0" align="start">
           <Calendar
             initialFocus
             mode="range"
