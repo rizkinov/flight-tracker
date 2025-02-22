@@ -73,4 +73,39 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Calendar overrides */
+.rdp-day_range_start,
+.rdp-day_range_end {
+  @apply !bg-primary !text-primary-foreground !rounded-md;
+}
+
+.rdp-day_range_middle {
+  @apply !bg-accent/50 !text-accent-foreground;
+}
+
+.rdp-day_selected {
+  @apply !bg-primary !text-primary-foreground hover:!bg-primary hover:!text-primary-foreground;
+}
+
+.rdp-day {
+  @apply !transition-colors;
+}
+
+/* Fix for range selection */
+[data-selected] {
+  @apply !bg-primary !text-primary-foreground;
+}
+
+[data-in-range] {
+  @apply !bg-accent/50;
+}
+
+[data-start] {
+  @apply !rounded-l-md;
+}
+
+[data-end] {
+  @apply !rounded-r-md;
 } 
