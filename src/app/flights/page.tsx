@@ -63,10 +63,7 @@ export default function FlightsPage() {
   const [usedCountries, setUsedCountries] = useState<Set<string>>(new Set())
   const [countries, setCountries] = useState<Country[]>([])
   const [loadingCountries, setLoadingCountries] = useState(true)
-  const [dateRange, setDateRange] = useState<DateRange>({
-    from: new Date(),
-    to: addDays(new Date(), 1)
-  })
+  const [dateRange, setDateRange] = useState<DateRange | undefined>()
 
   // Fetch countries from REST Countries API
   useEffect(() => {
@@ -113,7 +110,7 @@ export default function FlightsPage() {
       {
         id: Math.random().toString(36).substring(7),
         flightNumber: "",
-        date: new Date().toISOString().split('T')[0],
+        date: "",
         from: "Singapore",
         to: "",
         days: 1,

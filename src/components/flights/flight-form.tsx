@@ -96,10 +96,7 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
   const [loadingCountries, setLoadingCountries] = useState(true)
   const [usedCountries, setUsedCountries] = useState<Set<string>>(new Set())
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
-  const [dateRange, setDateRange] = useState<DateRange>({
-    from: new Date(),
-    to: addDays(new Date(), 1)
-  })
+  const [dateRange, setDateRange] = useState<DateRange | undefined>()
 
   // Fetch countries from REST Countries API
   useEffect(() => {
@@ -131,7 +128,7 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       flightNumber: "",
-      date: new Date().toISOString().split('T')[0],
+      date: "",
       from: "Singapore",
       to: "",
       days: 1,
