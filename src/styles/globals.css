@@ -76,7 +76,7 @@
 }
 
 /* Calendar Styles */
-.react-day-picker {
+.rdp {
   @apply p-3;
 }
 
@@ -88,21 +88,44 @@
   @apply space-y-4;
 }
 
-.rdp-day_range_start,
-.rdp-day_range_end {
-  @apply !bg-primary !text-primary-foreground !rounded-md;
+.rdp-caption {
+  @apply flex justify-center pt-1 relative items-center;
 }
 
-.rdp-day_range_middle {
-  @apply !bg-accent/50 !text-accent-foreground !rounded-none;
+.rdp-caption_label {
+  @apply text-sm font-medium;
 }
 
-.rdp-day_selected {
-  @apply !bg-primary !text-primary-foreground hover:!bg-primary hover:!text-primary-foreground;
+.rdp-nav {
+  @apply space-x-1 flex items-center;
+}
+
+.rdp-table {
+  @apply w-full border-collapse space-y-1;
+}
+
+.rdp-head_row {
+  @apply flex;
+}
+
+.rdp-head_cell {
+  @apply text-muted-foreground rounded-md w-9 font-normal text-[0.8rem];
+}
+
+.rdp-row {
+  @apply flex w-full mt-2;
+}
+
+.rdp-cell {
+  @apply relative p-0 text-center text-sm focus-within:relative focus-within:z-20;
 }
 
 .rdp-day {
-  @apply transition-colors h-9 w-9 p-0 font-normal hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground;
+  @apply h-9 w-9 p-0 font-normal transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground;
+}
+
+.rdp-day_selected {
+  @apply bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground;
 }
 
 .rdp-day_today {
@@ -115,4 +138,13 @@
 
 .rdp-day_disabled {
   @apply text-muted-foreground opacity-50;
+}
+
+.rdp-day_range_start,
+.rdp-day_range_end {
+  @apply bg-primary text-primary-foreground;
+}
+
+.rdp-day_range_middle {
+  @apply bg-accent/50 text-accent-foreground;
 } 
