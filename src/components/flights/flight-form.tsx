@@ -438,6 +438,13 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
                             setDateRange(range || { from: new Date(), to: addDays(new Date(), 1) })
                           }}
                           numberOfMonths={2}
+                          onClose={() => {
+                            const popover = document.querySelector('[data-state="open"]')
+                            if (popover) {
+                              const button = popover.querySelector('button')
+                              button?.click()
+                            }
+                          }}
                         />
                       </PopoverContent>
                     </Popover>

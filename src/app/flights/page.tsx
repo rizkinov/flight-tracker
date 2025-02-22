@@ -390,6 +390,13 @@ export default function FlightsPage() {
                       }
                     }}
                     numberOfMonths={2}
+                    onClose={() => {
+                      const popover = document.querySelector('[data-state="open"]')
+                      if (popover) {
+                        const button = popover.querySelector('button')
+                        button?.click()
+                      }
+                    }}
                   />
                 </PopoverContent>
               </Popover>
