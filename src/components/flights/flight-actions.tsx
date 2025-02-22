@@ -280,12 +280,15 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
     const { toast } = useToast()
     const [loading, setLoading] = useState(false)
     const router = useRouter()
-    const [dateRange, setDateRange] = useState<DateRange | undefined>(
-      flight.date ? {
-        from: new Date(flight.date),
-        to: addDays(new Date(flight.date), flight.days - 1)
-      } : undefined
-    )
+    const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
+      if (flight.date) {
+        return {
+          from: new Date(flight.date),
+          to: addDays(new Date(flight.date), flight.days - 1)
+        }
+      }
+      return undefined
+    })
 
     const form = useForm<FlightFormValues>({
       resolver: zodResolver(formSchema),
@@ -298,6 +301,24 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
         notes: flight.notes || ""
       }
     })
+
+    // Reset form and date range when dialog opens/closes
+    useEffect(() => {
+      if (open) {
+        form.reset({
+          flightNumber: flight.flightNumber,
+          date: flight.date,
+          from: flight.from,
+          to: flight.to,
+          days: flight.days,
+          notes: flight.notes || ""
+        })
+        setDateRange(flight.date ? {
+          from: new Date(flight.date),
+          to: addDays(new Date(flight.date), flight.days - 1)
+        } : undefined)
+      }
+    }, [open, flight, form])
 
     // Update days when date range changes
     useEffect(() => {
