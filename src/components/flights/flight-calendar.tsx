@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { DayPicker, DateRange } from "react-day-picker"
-import { format, isWithinInterval, startOfDay, differenceInDays } from "date-fns"
+import { format, differenceInDays } from "date-fns"
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
 
@@ -27,6 +27,23 @@ export function FlightCalendar({
   onClose,
   ...props
 }: FlightCalendarProps) {
+  const modifiersStyles = {
+    range_start: {
+      color: "var(--primary-foreground)",
+      backgroundColor: "var(--primary)",
+      borderRadius: "0.5rem 0 0 0.5rem",
+    },
+    range_end: {
+      color: "var(--primary-foreground)",
+      backgroundColor: "var(--primary)",
+      borderRadius: "0 0.5rem 0.5rem 0",
+    },
+    range_middle: {
+      color: "var(--accent-foreground)",
+      backgroundColor: "color-mix(in srgb, var(--accent) 50%, transparent)",
+    },
+  };
+
   return (
     <div className="flex flex-col">
       <DayPicker
@@ -35,6 +52,7 @@ export function FlightCalendar({
         onSelect={onSelect}
         showOutsideDays={showOutsideDays}
         className={cn("p-3", className)}
+        modifiersStyles={modifiersStyles}
         classNames={{
           months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
           month: "space-y-4",
@@ -52,25 +70,16 @@ export function FlightCalendar({
           head_cell:
             "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
           row: "flex w-full mt-2",
-          cell: cn(
-            "relative p-0 text-center text-sm focus-within:relative focus-within:z-20",
-            "first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md"
-          ),
-          day: cn(
-            "h-9 w-9 p-0 font-normal",
-            "hover:bg-accent hover:text-accent-foreground",
-            "focus-visible:bg-accent focus-visible:text-accent-foreground"
-          ),
-          day_selected: cn(
-            "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"
-          ),
+          cell: "relative p-0 text-center text-sm focus-within:relative focus-within:z-20",
+          day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 rounded-md transition-colors",
+          day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
           day_today: "bg-accent text-accent-foreground",
           day_outside: "text-muted-foreground opacity-50",
           day_disabled: "text-muted-foreground opacity-50",
           day_hidden: "invisible",
-          day_range_start: "rounded-l-md bg-primary text-primary-foreground",
-          day_range_end: "rounded-r-md bg-primary text-primary-foreground",
-          day_range_middle: "bg-accent/50",
+          day_range_start: "day-range-start",
+          day_range_end: "day-range-end",
+          day_range_middle: "day-range-middle",
           ...classNames,
         }}
         components={{
