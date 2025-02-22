@@ -25,6 +25,25 @@ export function DateRangePicker({
 }) {
   const [open, setOpen] = React.useState(false)
 
+  // Handle day selection with proper clearing behavior
+  const handleSelect = (range: DateRange | undefined) => {
+    // If a range is already selected and user clicks the start date, clear the selection
+    if (selected?.from && range?.from && 
+        selected.from.getTime() === range.from.getTime() && 
+        (!range.to || range.to.getTime() === range.from.getTime())) {
+      onSelect(undefined)
+      return
+    }
+
+    // If user selects a date earlier than current start date, reset and start new selection
+    if (selected?.from && range?.from && range.from < selected.from) {
+      onSelect({ from: range.from, to: undefined })
+      return
+    }
+
+    onSelect(range)
+  }
+
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover open={open} onOpenChange={setOpen}>
@@ -58,9 +77,33 @@ export function DateRangePicker({
             mode="range"
             defaultMonth={selected?.from}
             selected={selected}
-            onSelect={onSelect}
+            onSelect={handleSelect}
             numberOfMonths={2}
           />
+          <div className="flex items-center justify-end gap-2 p-3 border-t">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                onSelect(undefined)
+                setOpen(false)
+              }}
+            >
+              Clear
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => {
+                if (selected?.from && !selected.to) {
+                  // If only start date is selected, set end date to same day
+                  onSelect({ from: selected.from, to: selected.from })
+                }
+                setOpen(false)
+              }}
+            >
+              Done
+            </Button>
+          </div>
         </PopoverContent>
       </Popover>
     </div>

@@ -445,6 +445,7 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
                               } else {
                                 field.onChange('')
                                 form.setValue('days', 1)
+                                setDateRange(undefined)
                               }
                             }}
                           />

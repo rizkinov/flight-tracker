@@ -425,6 +425,7 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
                             } else {
                               field.onChange('')
                               form.setValue('days', 1)
+                              setDateRange(undefined)
                             }
                           }}
                         />
