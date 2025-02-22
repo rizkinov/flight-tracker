@@ -3,7 +3,7 @@
 import * as React from "react"
 import { CalendarIcon } from "lucide-react"
 import { addDays, format } from "date-fns"
-import { DateRange } from "react-day-picker"
+import { DateRange, DayPicker } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -59,16 +59,21 @@ export function DateRangePicker({
             defaultMonth={date?.from}
             selected={date}
             onSelect={(range) => {
-              if (range?.from) {
-                // If only start date is selected
-                if (!range.to) {
-                  onDateChange({ from: range.from, to: range.from })
-                } else {
-                  onDateChange(range)
-                }
-              } else {
+              // If clicking the same start date, reset the selection
+              if (date?.from && range?.from && 
+                  date.from.getTime() === range.from.getTime() && 
+                  !range.to) {
                 onDateChange(undefined)
+                return
               }
+
+              // If only start date is selected, set both start and end to the same date
+              if (range?.from && !range.to) {
+                onDateChange({ from: range.from, to: range.from })
+                return
+              }
+
+              onDateChange(range || undefined)
             }}
             numberOfMonths={2}
           />
