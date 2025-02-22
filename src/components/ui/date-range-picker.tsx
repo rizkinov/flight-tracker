@@ -34,20 +34,21 @@ export function DateRangePicker({
     }
 
     // If we have a selected range and clicked date is earlier, start new range
-    if (selected?.from && range.from && range.from < selected.from) {
-      onSelect({ from: range.from, to: undefined })
-      return
+    if (selected?.from && range.from) {
+      // If clicking an earlier date, set it as new start date only
+      if (range.from < selected.from) {
+        onSelect({ from: range.from, to: undefined })
+        return
+      }
+
+      // If clicking the same start date, clear selection
+      if (range.from.getTime() === selected.from.getTime()) {
+        onSelect(undefined)
+        return
+      }
     }
 
-    // If clicking the same start date, clear selection
-    if (selected?.from && range.from && 
-        selected.from.getTime() === range.from.getTime() && 
-        (!range.to || range.to.getTime() === range.from.getTime())) {
-      onSelect(undefined)
-      return
-    }
-
-    // Otherwise, use the range as is
+    // For all other cases (new selection, extending range, etc)
     onSelect(range)
   }
 
