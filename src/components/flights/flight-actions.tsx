@@ -154,14 +154,14 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
     value, 
     onChange,
     placeholder,
-    id  // Add id parameter
+    id
   }: { 
     value: string, 
     onChange: (value: string) => void,
     placeholder: string,
-    id: string  // Add id to props
+    id: string
   }) => {
-    const isOpen = activeDropdown === id
+    const [open, setOpen] = useState(false)
     const [searchQuery, setSearchQuery] = useState("")
     const color = value ? getCountryColor(value) : undefined
 
@@ -170,105 +170,100 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
       country.name.common.toLowerCase().includes(searchQuery.toLowerCase())
     )
 
-    const handleOpen = () => {
-      setActiveDropdown(isOpen ? null : id)
-      if (!isOpen) {
-        setSearchQuery("")
-      }
-    }
-
     return (
-      <div className="relative w-full">
-        <Button
-          type="button"
-          variant="outline"
-          role="combobox"
-          className="w-full justify-between transition-colors duration-200"
-          onClick={handleOpen}
-          style={{
-            backgroundColor: color,
-            borderColor: color ? color.replace('rgb', 'rgba').replace(')', ', 0.5)') : undefined,
-            color: color ? '#000000' : undefined
-          }}
-        >
-          <div className="flex items-center gap-2 truncate">
-            {value && (
-              <Image 
-                src={countries.find(c => c.name.common === value)?.flags.png || ''}
-                alt={`${value} flag`}
-                width={16}
-                height={12}
-                className="object-cover"
-              />
-            )}
-            <span className="truncate">{value || placeholder}</span>
-          </div>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-
-        {isOpen && (
-          <div 
-            className="absolute z-[99999] w-full mt-2 rounded-md border bg-popover shadow-md transition-all duration-200 animate-in fade-in-0 zoom-in-95"
-            style={{ minWidth: "300px" }}
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-full justify-between transition-colors duration-200"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: color,
+              borderColor: color ? color.replace('rgb', 'rgba').replace(')', ', 0.5)') : undefined,
+              color: color ? '#000000' : undefined
+            }}
           >
-            <div className="p-2">
-              <Input
-                placeholder="Search country..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="border focus-visible:ring-0 focus-visible:ring-offset-0"
-                onClick={(e) => e.stopPropagation()}
-              />
-            </div>
-            <div 
-              className="max-h-[200px] overflow-y-auto p-2"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {loadingCountries ? (
-                <div className="p-4 text-center text-sm text-muted-foreground">
-                  Loading countries...
-                </div>
-              ) : filteredCountries.length === 0 ? (
-                <div className="p-4 text-center text-sm text-muted-foreground">
-                  No country found.
-                </div>
-              ) : (
-                <div className="grid gap-1">
-                  {filteredCountries.map((country) => (
-                    <div
-                      key={country.cca2}
-                      onClick={() => {
-                        onChange(country.name.common);
-                        setSearchQuery("");
-                        setActiveDropdown(null);
-                        setUsedCountries(prev => new Set(Array.from(prev).concat(country.name.common)));
-                      }}
-                      className={cn(
-                        "flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm cursor-pointer hover:bg-accent",
-                        value === country.name.common && "bg-accent"
-                      )}
-                    >
-                      <div className="flex items-center gap-2 flex-1">
-                        <Image 
-                          src={country.flags.png} 
-                          alt={`${country.name.common} flag`}
-                          width={16}
-                          height={12}
-                          className="object-cover"
-                        />
-                        <span className="flex-1">{country.name.common}</span>
-                      </div>
-                      {value === country.name.common && (
-                        <Check className="h-4 w-4 shrink-0" />
-                      )}
-                    </div>
-                  ))}
-                </div>
+            <div className="flex items-center gap-2 truncate">
+              {value && (
+                <Image 
+                  src={countries.find(c => c.name.common === value)?.flags.png || ''}
+                  alt={`${value} flag`}
+                  width={16}
+                  height={12}
+                  className="object-cover"
+                />
               )}
+              <span className="truncate">{value || placeholder}</span>
             </div>
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent 
+          className="w-[300px] p-0 transition-all duration-200 animate-in fade-in-0 zoom-in-95"
+          align="start"
+          side="bottom"
+        >
+          <div className="flex items-center border-b p-2">
+            <Input
+              placeholder="Search country..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+              onClick={(e) => e.stopPropagation()}
+            />
           </div>
-        )}
-      </div>
+          <div 
+            className="max-h-[200px] overflow-y-auto p-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {loadingCountries ? (
+              <div className="p-4 text-center text-sm text-muted-foreground">
+                Loading countries...
+              </div>
+            ) : filteredCountries.length === 0 ? (
+              <div className="p-4 text-center text-sm text-muted-foreground">
+                No country found.
+              </div>
+            ) : (
+              <div className="grid gap-1">
+                {filteredCountries.map((country) => (
+                  <div
+                    key={country.cca2}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onChange(country.name.common);
+                      setSearchQuery("");
+                      setOpen(false);
+                      setUsedCountries(prev => new Set(Array.from(prev).concat(country.name.common)));
+                    }}
+                    className={cn(
+                      "flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm cursor-pointer hover:bg-accent",
+                      value === country.name.common && "bg-accent"
+                    )}
+                  >
+                    <div className="flex items-center gap-2 flex-1">
+                      <Image 
+                        src={country.flags.png} 
+                        alt={`${country.name.common} flag`}
+                        width={16}
+                        height={12}
+                        className="object-cover"
+                      />
+                      <span className="flex-1">{country.name.common}</span>
+                    </div>
+                    {value === country.name.common && (
+                      <Check className="h-4 w-4 shrink-0" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </PopoverContent>
+      </Popover>
     )
   }
 
@@ -328,7 +323,7 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
             <span className="sr-only">Edit flight</span>
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-2xl gap-6">
+        <DialogContent className="max-w-2xl gap-6 z-50">
           <DialogHeader>
             <DialogTitle>Edit Flight</DialogTitle>
             <DialogDescription>
