@@ -52,6 +52,14 @@ import { updateFlight } from "@/lib/services/flights"
 import { DateRange } from "react-day-picker"
 import { format, addDays, differenceInDays } from "date-fns"
 import { DateRangePicker } from "@/components/ui/date-range-picker"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
 
 interface Country {
   name: {
@@ -279,16 +287,7 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
     const { user } = useAuth()
     const { toast } = useToast()
     const [loading, setLoading] = useState(false)
-    const router = useRouter()
-    const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
-      if (flight.date) {
-        return {
-          from: new Date(flight.date),
-          to: addDays(new Date(flight.date), flight.days - 1)
-        }
-      }
-      return undefined
-    })
+    const [dateRange, setDateRange] = useState<DateRange | undefined>()
 
     const form = useForm<FlightFormValues>({
       resolver: zodResolver(formSchema),
@@ -302,9 +301,12 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
       }
     })
 
-    // Reset form and date range when dialog opens/closes
+    // Reset form and date range when dialog opens
     useEffect(() => {
       if (open) {
+        const startDate = new Date(flight.date)
+        const endDate = addDays(startDate, flight.days - 1)
+        
         form.reset({
           flightNumber: flight.flightNumber,
           date: flight.date,
@@ -314,10 +316,7 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
           notes: flight.notes || ""
         })
         
-        setDateRange({
-          from: new Date(flight.date),
-          to: addDays(new Date(flight.date), flight.days - 1)
-        })
+        setDateRange({ from: startDate, to: endDate })
       }
     }, [open, flight, form])
 
@@ -347,37 +346,21 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
     }, [form, dateRange])
 
     async function onSubmit(data: FlightFormValues) {
-      console.log('Form submission started:', { data })
-      if (!user) {
-        console.error('No user found during submission')
-        return
-      }
+      if (!user) return
 
       setLoading(true)
-      console.log('Starting flight update process:', { flightId: flight.id, newData: data, userId: user.uid })
-      
       try {
-        console.log('Calling updateFlight service...')
         await updateFlight(flight.id, data, user.isAnonymous)
-        console.log('Flight update completed successfully')
         
         toast({
           title: "Flight updated",
           description: `Flight ${data.flightNumber} has been updated.`,
         })
-        console.log('Toast notification shown')
         
         onOpenChange(false)
-        console.log('Dialog closed')
-        
-        console.log('Initiating page reload...')
-        // Add a small delay to ensure Firebase update is complete
-        setTimeout(() => {
-          console.log('Executing page reload')
-          window.location.reload()
-        }, 1000) // Increased delay to 1 second
+        window.location.reload()
       } catch (error) {
-        console.error('Error in flight update process:', error)
+        console.error('Error updating flight:', error)
         toast({
           title: "Error",
           description: "Failed to update flight. Please try again.",
@@ -390,111 +373,144 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
 
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl gap-6 z-50">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Flight</DialogTitle>
             <DialogDescription>
               Make changes to your flight details.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="flightNumber" className="text-right">
-                Flight #
-              </Label>
-              <Input
-                id="flightNumber"
-                value={form.watch('flightNumber')}
-                onChange={(e) => form.setValue('flightNumber', e.target.value)}
-                className="col-span-3"
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="flightNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Flight Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. SQ123" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="date" className="text-right">
-                Travel Period
-              </Label>
-              <div className="col-span-3">
-                <DateRangePicker
-                  date={dateRange}
-                  onDateChange={(range) => {
-                    setDateRange(range)
-                    if (range?.from) {
-                      form.setValue('date', format(range.from, 'yyyy-MM-dd'))
-                      if (range.to) {
-                        const days = differenceInDays(range.to, range.from) + 1
-                        form.setValue('days', days)
-                      }
-                    } else {
-                      form.setValue('date', '')
-                      form.setValue('days', 1)
-                    }
-                  }}
+              <FormField
+                control={form.control}
+                name="from"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>From</FormLabel>
+                    <FormControl>
+                      <CountrySelect
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Select departure country"
+                        id="edit-from-country"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="to"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>To</FormLabel>
+                    <FormControl>
+                      <CountrySelect
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Select arrival country"
+                        id="edit-to-country"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="grid gap-4">
+                <FormField
+                  control={form.control}
+                  name="date"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Travel Period</FormLabel>
+                      <FormControl>
+                        <DateRangePicker
+                          date={dateRange}
+                          onDateChange={(range) => {
+                            setDateRange(range)
+                            if (range?.from) {
+                              field.onChange(format(range.from, 'yyyy-MM-dd'))
+                              if (range.to) {
+                                const days = differenceInDays(range.to, range.from) + 1
+                                form.setValue('days', days)
+                              }
+                            } else {
+                              field.onChange('')
+                              form.setValue('days', 1)
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="days"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Days in Destination</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="1"
+                          {...field}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value, 10)
+                            if (value > 0) {
+                              field.onChange(value)
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="from" className="text-right">
-                From
-              </Label>
-              <div className="col-span-3">
-                <CountrySelect
-                  value={form.watch('from')}
-                  onChange={(value) => form.setValue('from', value)}
-                  placeholder="Select departure country"
-                  id="edit-from-country"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="to" className="text-right">
-                To
-              </Label>
-              <div className="col-span-3">
-                <CountrySelect
-                  value={form.watch('to')}
-                  onChange={(value) => form.setValue('to', value)}
-                  placeholder="Select arrival country"
-                  id="edit-to-country"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="days" className="text-right">
-                Days
-              </Label>
-              <Input
-                id="days"
-                type="number"
-                min="1"
-                value={form.watch('days')}
-                onChange={(e) => {
-                  const days = parseInt(e.target.value, 10) || 1
-                  form.setValue('days', days)
-                  if (dateRange?.from) {
-                    setDateRange({
-                      from: dateRange.from,
-                      to: addDays(dateRange.from, days - 1)
-                    })
-                  }
-                }}
-                className="col-span-3"
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Add any additional notes about your flight"
+                        className="min-h-[100px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="notes" className="text-right">
-                Notes
-              </Label>
-              <Textarea
-                id="notes"
-                value={form.watch('notes')}
-                onChange={(e) => form.setValue('notes', e.target.value)}
-                className="col-span-3"
-              />
-            </div>
-          </form>
-          <DialogFooter>
-            <Button type="submit" onClick={() => form.handleSubmit(onSubmit)()} disabled={loading}>Save changes</Button>
-          </DialogFooter>
+              <div className="flex justify-end">
+                <Button 
+                  type="submit" 
+                  disabled={loading}
+                >
+                  {loading ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     )
