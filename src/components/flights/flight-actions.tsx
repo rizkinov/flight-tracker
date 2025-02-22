@@ -294,17 +294,30 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
       if (!user) return
 
       setLoading(true)
+      console.log('Starting flight update process:', { flightId: flight.id, newData: data })
+      
       try {
+        console.log('Calling updateFlight service...')
         await updateFlight(flight.id, data, user.isAnonymous)
+        console.log('Flight update completed successfully')
+        
         toast({
           title: "Flight updated",
           description: `Flight ${data.flightNumber} has been updated.`,
         })
+        console.log('Toast notification shown')
+        
         onOpenChange(false)
-        // Force a hard refresh to get the latest data
-        window.location.reload()
+        console.log('Dialog closed')
+        
+        console.log('Initiating page reload...')
+        // Add a small delay to ensure Firebase update is complete
+        setTimeout(() => {
+          console.log('Executing page reload')
+          window.location.reload()
+        }, 500)
       } catch (error) {
-        console.error('Error updating flight:', error)
+        console.error('Error in flight update process:', error)
         toast({
           title: "Error",
           description: "Failed to update flight. Please try again.",
