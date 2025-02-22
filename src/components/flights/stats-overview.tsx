@@ -161,7 +161,7 @@ export function StatsOverview() {
                   dataKey="days"
                   nameKey="name"
                   cx="50%"
-                  cy="50%"
+                  cy="45%"
                   outerRadius={100}
                 >
                   {stats.countryData.map((entry, index) => (
@@ -188,12 +188,12 @@ export function StatsOverview() {
                       {value.length > 15 ? `${value.slice(0, 15)}...` : value}
                     </span>
                   )}
-                  layout="vertical"
-                  align="right"
-                  verticalAlign="middle"
+                  layout="horizontal"
+                  align="center"
+                  verticalAlign="bottom"
                   wrapperStyle={{
                     fontSize: '10px',
-                    paddingLeft: '10px',
+                    paddingTop: '20px',
                   }}
                 />
               </PieChart>

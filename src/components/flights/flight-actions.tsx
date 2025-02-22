@@ -43,6 +43,12 @@ import {
   CommandItem,
 } from "@/components/ui/command"
 import Image from 'next/image'
+import { useAuth } from "@/lib/auth-context"
+import { useRouter } from "next/navigation"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { updateFlight } from "@/lib/services/flights"
 
 interface Country {
   name: {
@@ -75,6 +81,31 @@ const entryColors = [
   "#f5d0fe", // Light Magenta
 ]
 
+const formSchema = z.object({
+  flightNumber: z.string().min(1, "Flight number is required"),
+  from: z.string().min(1, "Departure city is required"),
+  to: z.string().min(1, "Arrival city is required"),
+  date: z.string().min(1, "Date is required"),
+  days: z.number().min(1, "Must stay at least 1 day"),
+  notes: z.string().optional(),
+})
+
+type FlightFormValues = z.infer<typeof formSchema>
+
+interface EditFlightDialogProps {
+  flight: {
+    id: string;
+    flightNumber: string;
+    date: string;
+    from: string;
+    to: string;
+    days: number;
+    notes?: string;
+  };
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
 export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) {
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [editedFlight, setEditedFlight] = useState(flight)
@@ -83,6 +114,8 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
   const [usedCountries, setUsedCountries] = useState<Set<string>>(new Set([flight.from, flight.to]))
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const { toast } = useToast()
+  const { user } = useAuth()
+  const router = useRouter()
 
   // Fetch countries from REST Countries API
   useEffect(() => {
@@ -154,7 +187,8 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
           onClick={handleOpen}
           style={{
             backgroundColor: color,
-            borderColor: color ? color.replace('rgb', 'rgba').replace(')', ', 0.5)') : undefined
+            borderColor: color ? color.replace('rgb', 'rgba').replace(')', ', 0.5)') : undefined,
+            color: color ? '#000000' : undefined // Force dark text when a country is selected
           }}
         >
           <div className="flex items-center gap-2 truncate">
@@ -243,9 +277,51 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
     setIsEditOpen(false)
   }
 
-  return (
-    <div className="flex gap-2">
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+  const EditFlightDialog = ({ flight, open, onOpenChange }: EditFlightDialogProps) => {
+    const { user } = useAuth()
+    const { toast } = useToast()
+    const [loading, setLoading] = useState(false)
+    const router = useRouter()
+
+    const form = useForm<FlightFormValues>({
+      resolver: zodResolver(formSchema),
+      defaultValues: {
+        flightNumber: flight.flightNumber,
+        date: flight.date,
+        from: flight.from,
+        to: flight.to,
+        days: flight.days,
+        notes: flight.notes || ""
+      }
+    })
+
+    async function onSubmit(data: FlightFormValues) {
+      if (!user) return
+
+      setLoading(true)
+      try {
+        await updateFlight(flight.id, data)
+        toast({
+          title: "Flight updated",
+          description: `Flight ${data.flightNumber} has been updated.`,
+        })
+        onOpenChange(false)
+        // Force a hard refresh to get the latest data
+        window.location.reload()
+      } catch (error) {
+        console.error('Error updating flight:', error)
+        toast({
+          title: "Error",
+          description: "Failed to update flight. Please try again.",
+          variant: "destructive",
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogTrigger asChild>
           <Button variant="ghost" size="icon" className="h-8 w-8">
             <Pencil className="h-4 w-4" />
@@ -266,10 +342,8 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
               </Label>
               <Input
                 id="flightNumber"
-                value={editedFlight.flightNumber}
-                onChange={(e) =>
-                  setEditedFlight({ ...editedFlight, flightNumber: e.target.value })
-                }
+                value={form.watch('flightNumber')}
+                onChange={(e) => form.setValue('flightNumber', e.target.value)}
                 className="col-span-3"
               />
             </div>
@@ -280,10 +354,8 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
               <Input
                 id="date"
                 type="date"
-                value={editedFlight.date}
-                onChange={(e) =>
-                  setEditedFlight({ ...editedFlight, date: e.target.value })
-                }
+                value={form.watch('date')}
+                onChange={(e) => form.setValue('date', e.target.value)}
                 className="col-span-3"
               />
             </div>
@@ -293,8 +365,8 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
               </Label>
               <div className="col-span-3">
                 <CountrySelect
-                  value={editedFlight.from}
-                  onChange={(value) => setEditedFlight({ ...editedFlight, from: value })}
+                  value={form.watch('from')}
+                  onChange={(value) => form.setValue('from', value)}
                   placeholder="Select departure country"
                   id="edit-from-country"
                 />
@@ -306,8 +378,8 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
               </Label>
               <div className="col-span-3">
                 <CountrySelect
-                  value={editedFlight.to}
-                  onChange={(value) => setEditedFlight({ ...editedFlight, to: value })}
+                  value={form.watch('to')}
+                  onChange={(value) => form.setValue('to', value)}
                   placeholder="Select arrival country"
                   id="edit-to-country"
                 />
@@ -321,10 +393,8 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
                 id="days"
                 type="number"
                 min="1"
-                value={editedFlight.days}
-                onChange={(e) =>
-                  setEditedFlight({ ...editedFlight, days: parseInt(e.target.value, 10) || 1 })
-                }
+                value={form.watch('days')}
+                onChange={(e) => form.setValue('days', parseInt(e.target.value, 10) || 1)}
                 className="col-span-3"
               />
             </div>
@@ -334,19 +404,23 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
               </Label>
               <Textarea
                 id="notes"
-                value={editedFlight.notes}
-                onChange={(e) =>
-                  setEditedFlight({ ...editedFlight, notes: e.target.value })
-                }
+                value={form.watch('notes')}
+                onChange={(e) => form.setValue('notes', e.target.value)}
                 className="col-span-3"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit" onClick={handleEdit}>Save changes</Button>
+            <Button type="submit" onClick={() => form.handleSubmit(onSubmit)()} disabled={loading}>Save changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    )
+  }
+
+  return (
+    <div className="flex gap-2">
+      <EditFlightDialog flight={flight} open={isEditOpen} onOpenChange={setIsEditOpen} />
 
       <AlertDialog>
         <AlertDialogTrigger asChild>

@@ -228,7 +228,8 @@ export default function FlightsPage() {
             className="w-full justify-between"
             style={{
               backgroundColor: color,
-              borderColor: color ? color.replace('rgb', 'rgba').replace(')', ', 0.5)') : undefined
+              borderColor: color ? color.replace('rgb', 'rgba').replace(')', ', 0.5)') : undefined,
+              color: color ? '#000000' : undefined
             }}
           >
             <div className="flex items-center gap-2 truncate">

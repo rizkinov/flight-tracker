@@ -176,7 +176,8 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
           onClick={handleOpen}
           style={{
             backgroundColor: color,
-            borderColor: color ? color.replace('rgb', 'rgba').replace(')', ', 0.5)') : undefined
+            borderColor: color ? color.replace('rgb', 'rgba').replace(')', ', 0.5)') : undefined,
+            color: color ? '#000000' : undefined
           }}
         >
           <div className="flex items-center gap-2 truncate">
