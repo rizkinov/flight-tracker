@@ -352,8 +352,8 @@ export default function FlightsPage() {
               />
               <div className="w-full">
                 <DateRangePicker
-                  date={flight.dateRange}
-                  onDateChange={(range) => {
+                  selected={flight.dateRange}
+                  onSelect={(range) => {
                     setFlights(flights.map(f => {
                       if (f.id === flight.id) {
                         return {
