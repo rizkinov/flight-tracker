@@ -291,10 +291,14 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
     })
 
     async function onSubmit(data: FlightFormValues) {
-      if (!user) return
+      console.log('Form submission started:', { data })
+      if (!user) {
+        console.error('No user found during submission')
+        return
+      }
 
       setLoading(true)
-      console.log('Starting flight update process:', { flightId: flight.id, newData: data })
+      console.log('Starting flight update process:', { flightId: flight.id, newData: data, userId: user.uid })
       
       try {
         console.log('Calling updateFlight service...')
@@ -315,7 +319,7 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
         setTimeout(() => {
           console.log('Executing page reload')
           window.location.reload()
-        }, 500)
+        }, 1000) // Increased delay to 1 second
       } catch (error) {
         console.error('Error in flight update process:', error)
         toast({

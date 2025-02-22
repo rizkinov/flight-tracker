@@ -71,18 +71,22 @@ export async function createFlight(userId: string, data: CreateFlightData, isAno
 }
 
 export async function updateFlight(flightId: string, data: UpdateFlightData, isAnonymous: boolean = false) {
+  console.log('updateFlight service called:', { flightId, data, isAnonymous })
   try {
     const flightRef = doc(db, 'flights', flightId)
-    await updateDoc(flightRef, {
+    console.log('Preparing update data with timestamp')
+    const updateData = {
       ...data,
       updatedAt: Timestamp.now(),
-      // Extend expiration for anonymous users
       ...(isAnonymous && {
         expiresAt: Timestamp.fromDate(new Date(Date.now() + 24 * 60 * 60 * 1000))
       })
-    })
+    }
+    console.log('Calling Firestore updateDoc:', updateData)
+    await updateDoc(flightRef, updateData)
+    console.log('Firestore update completed successfully')
   } catch (error) {
-    console.error('Error updating flight:', error)
+    console.error('Error in updateFlight service:', error)
     throw error
   }
 }
