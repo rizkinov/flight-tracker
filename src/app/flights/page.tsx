@@ -15,11 +15,9 @@ import {
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import Image from 'next/image'
-import { FlightCalendar } from "@/components/flights/flight-calendar"
-import { DateRange } from "react-day-picker"
+import { DateRangePicker } from "@/components/ui/date-range-picker"
 import { format, addDays, differenceInDays } from "date-fns"
 import { CalendarIcon } from "lucide-react"
-import { DateRangePicker } from "@/components/ui/date-range-picker"
 
 // Define a list of colors for entries
 const entryColors = [

@@ -44,7 +44,6 @@ import {
 import Image from 'next/image'
 import { DateRange } from 'react-day-picker'
 import { format, addDays, differenceInDays } from 'date-fns'
-import { FlightCalendar } from "./flight-calendar"
 import { DateRangePicker } from "@/components/ui/date-range-picker"
 
 interface Country {
