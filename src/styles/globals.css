@@ -75,37 +75,28 @@
   }
 }
 
-/* Calendar overrides */
-.rdp-day_range_start,
-.rdp-day_range_end {
-  @apply !bg-primary !text-primary-foreground !rounded-md;
+/* Calendar styles */
+.day-range-start,
+.day-range-end {
+  @apply bg-primary text-primary-foreground !important;
 }
 
-.rdp-day_range_middle {
-  @apply !bg-accent/50 !text-accent-foreground;
+.day-range-start {
+  @apply rounded-l-md;
 }
 
-.rdp-day_selected {
-  @apply !bg-primary !text-primary-foreground hover:!bg-primary hover:!text-primary-foreground;
+.day-range-end {
+  @apply rounded-r-md;
 }
 
-.rdp-day {
-  @apply !transition-colors;
+[aria-selected="true"] {
+  @apply bg-primary text-primary-foreground;
 }
 
-/* Fix for range selection */
-[data-selected] {
-  @apply !bg-primary !text-primary-foreground;
+[aria-selected="true"][data-in-range="true"] {
+  @apply bg-accent/50 text-foreground;
 }
 
-[data-in-range] {
-  @apply !bg-accent/50;
-}
-
-[data-start] {
-  @apply !rounded-l-md;
-}
-
-[data-end] {
-  @apply !rounded-r-md;
+[data-in-range="true"] {
+  @apply bg-accent/50;
 } 
