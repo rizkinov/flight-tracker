@@ -38,68 +38,51 @@ console.log('Initializing Firebase with config:', {
 
 // Initialize Firebase
 let app: FirebaseApp
-try {
+let auth: Auth
+let db: Firestore
+let analytics: Analytics | null = null
+
+if (typeof window !== 'undefined') {
+  try {
+    if (!getApps().length) {
+      app = initializeApp(firebaseConfig)
+    } else {
+      app = getApp()
+    }
+    
+    // Initialize services
+    auth = getAuth(app)
+    db = getFirestore(app)
+    
+    // Enable offline persistence
+    enableIndexedDbPersistence(db).catch((err) => {
+      if (err.code === 'failed-precondition') {
+        console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.')
+      } else if (err.code === 'unimplemented') {
+        console.warn('The current browser doesn\'t support persistence.')
+      }
+    })
+
+    // Initialize Analytics only in production
+    if (process.env.NODE_ENV === 'production') {
+      isSupported().then(yes => {
+        if (yes) {
+          analytics = getAnalytics(app)
+        }
+      })
+    }
+  } catch (error) {
+    console.error('Error initializing Firebase:', error)
+  }
+} else {
+  // Server-side initialization
   if (!getApps().length) {
     app = initializeApp(firebaseConfig)
-    console.log('Firebase app initialized successfully:', app.name)
   } else {
     app = getApp()
-    console.log('Using existing Firebase app:', app.name)
   }
-} catch (error) {
-  console.error('Error initializing Firebase app:', error)
-  throw error
-}
-
-// Initialize services
-let auth: Auth
-try {
   auth = getAuth(app)
-  console.log('Firebase auth initialized successfully')
-} catch (error) {
-  console.error('Error initializing Firebase auth:', error)
-  throw error
-}
-
-let db: Firestore
-try {
   db = getFirestore(app)
-  console.log('Firebase Firestore initialized successfully')
-} catch (error) {
-  console.error('Error initializing Firestore:', error)
-  throw error
-}
-
-// Enable offline persistence
-if (typeof window !== 'undefined') {
-  enableIndexedDbPersistence(db).catch((err) => {
-    if (err.code === 'failed-precondition') {
-      console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.')
-    } else if (err.code === 'unimplemented') {
-      console.warn('The current browser doesn\'t support persistence.')
-    } else {
-      console.error('Error enabling persistence:', err)
-    }
-  })
-}
-
-// Initialize Analytics only in production
-let analytics: Analytics | null = null
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
-  isSupported().then(yes => {
-    if (yes) {
-      try {
-        analytics = getAnalytics(app)
-        console.log('Firebase Analytics initialized successfully')
-      } catch (error) {
-        console.error('Error initializing Firebase Analytics:', error)
-      }
-    } else {
-      console.log('Firebase Analytics not supported in this environment')
-    }
-  }).catch(error => {
-    console.error('Error checking Analytics support:', error)
-  })
 }
 
 export { app, auth, db, analytics } 
