@@ -301,7 +301,7 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
       }
     })
 
-    // Reset form and date range when dialog opens
+    // Reset form and date range when dialog opens/closes
     useEffect(() => {
       if (open) {
         const startDate = new Date(flight.date)
@@ -318,7 +318,6 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
         
         setDateRange({ from: startDate, to: endDate })
       } else {
-        // Reset date range when dialog closes
         setDateRange(undefined)
       }
     }, [open, flight, form])
@@ -445,14 +444,24 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
                         <DateRangePicker
                           date={dateRange}
                           onDateChange={(range) => {
-                            if (range?.from) {
-                              const startDate = range.from
-                              const endDate = range.to || startDate
-                              setDateRange({ from: startDate, to: endDate })
-                            } else {
+                            if (!range) {
                               setDateRange(undefined)
                               field.onChange('')
                               form.setValue('days', 1)
+                              return
+                            }
+
+                            // Always use the newly selected dates
+                            if (range.from) {
+                              const startDate = range.from
+                              const endDate = range.to || startDate
+                              const newRange = { from: startDate, to: endDate }
+                              setDateRange(newRange)
+                              
+                              // Update form values
+                              field.onChange(format(startDate, 'yyyy-MM-dd'))
+                              const days = differenceInDays(endDate, startDate) + 1
+                              form.setValue('days', days)
                             }
                           }}
                         />
