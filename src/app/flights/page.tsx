@@ -48,12 +48,11 @@ interface Country {
 interface BatchFlight {
   id: string
   flightNumber: string
-  date: string
+  dateRange: DateRange | undefined
   from: string
   to: string
   days: number
   notes?: string
-  dateRange?: DateRange
 }
 
 export default function FlightsPage() {
@@ -111,12 +110,11 @@ export default function FlightsPage() {
       {
         id: Math.random().toString(36).substring(7),
         flightNumber: "",
-        date: "",
+        dateRange: undefined,
         from: "Singapore",
         to: "",
         days: 1,
         notes: "",
-        dateRange: undefined
       }
     ])
     // Update used countries to include Singapore
@@ -157,7 +155,7 @@ export default function FlightsPage() {
 
     // Validate all flights
     const invalidFlights = flights.filter(flight => 
-      !flight.flightNumber || !flight.date || !flight.from || !flight.to || flight.days < 1
+      !flight.flightNumber || !flight.dateRange?.from || !flight.from || !flight.to || flight.days < 1
     )
 
     if (invalidFlights.length > 0) {
@@ -175,7 +173,7 @@ export default function FlightsPage() {
       await Promise.all(flights.map(flight => 
         createFlight(user.uid, {
           flightNumber: flight.flightNumber,
-          date: flight.date,
+          date: flight.dateRange?.from ? format(flight.dateRange.from, 'yyyy-MM-dd') : '',
           from: flight.from,
           to: flight.to,
           days: flight.days,
@@ -359,8 +357,9 @@ export default function FlightsPage() {
                         return {
                           ...f,
                           dateRange: range,
-                          date: range?.from ? format(range.from, 'yyyy-MM-dd') : '',
-                          days: range?.from && range?.to ? differenceInDays(range.to, range.from) + 1 : 1
+                          days: range?.from && range?.to ? 
+                            differenceInDays(range.to, range.from) + 1 : 
+                            1
                         }
                       }
                       return f
