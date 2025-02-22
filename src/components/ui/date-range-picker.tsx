@@ -59,11 +59,18 @@ export function DateRangePicker({
             defaultMonth={date?.from}
             selected={date}
             onSelect={(range) => {
-              // If clicking the same start date, reset the selection
+              // If clicking the same start date again, reset the selection
               if (date?.from && range?.from && 
                   date.from.getTime() === range.from.getTime() && 
                   !range.to) {
                 onDateChange(undefined)
+                return
+              }
+
+              // If clicking the same end date again, reset to just the start date
+              if (date?.to && range?.to && 
+                  date.to.getTime() === range.to.getTime()) {
+                onDateChange({ from: date.from, to: date.from })
                 return
               }
 
