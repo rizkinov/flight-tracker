@@ -25,6 +25,10 @@ export function DateRangePicker({
   date,
   onDateChange,
 }: DateRangePickerProps) {
+  const formatDisplayDate = (date: Date) => {
+    return format(date, "MMM d")
+  }
+
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover>
@@ -41,11 +45,10 @@ export function DateRangePicker({
             {date?.from ? (
               date.to ? (
                 <>
-                  {format(date.from, "LLL dd, y")} -{" "}
-                  {format(date.to, "LLL dd, y")}
+                  {formatDisplayDate(date.from)} - {formatDisplayDate(date.to)}
                 </>
               ) : (
-                format(date.from, "LLL dd, y")
+                formatDisplayDate(date.from)
               )
             ) : (
               <span>Pick a date</span>
@@ -60,6 +63,9 @@ export function DateRangePicker({
             selected={date}
             onSelect={onDateChange}
             numberOfMonths={2}
+            formatters={{
+              formatCaption: (date, options) => format(date, "MMMM yyyy")
+            }}
           />
         </PopoverContent>
       </Popover>
