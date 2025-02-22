@@ -183,12 +183,12 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
           type="button"
           variant="outline"
           role="combobox"
-          className="w-full justify-between"
+          className="w-full justify-between transition-colors duration-200"
           onClick={handleOpen}
           style={{
             backgroundColor: color,
             borderColor: color ? color.replace('rgb', 'rgba').replace(')', ', 0.5)') : undefined,
-            color: color ? '#000000' : undefined // Force dark text when a country is selected
+            color: color ? '#000000' : undefined
           }}
         >
           <div className="flex items-center gap-2 truncate">
@@ -208,7 +208,7 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
 
         {isOpen && (
           <div 
-            className="absolute z-[99999] w-full mt-2 rounded-md border bg-popover shadow-md"
+            className="absolute z-[99999] w-full mt-2 rounded-md border bg-popover shadow-md transition-all duration-200 animate-in fade-in-0 zoom-in-95"
             style={{ minWidth: "300px" }}
           >
             <div className="p-2">
@@ -328,14 +328,14 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
             <span className="sr-only">Edit flight</span>
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="max-w-2xl gap-6">
           <DialogHeader>
             <DialogTitle>Edit Flight</DialogTitle>
             <DialogDescription>
-              Make changes to your flight details here.
+              Make changes to your flight details.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="flightNumber" className="text-right">
                 Flight #
@@ -409,7 +409,7 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
                 className="col-span-3"
               />
             </div>
-          </div>
+          </form>
           <DialogFooter>
             <Button type="submit" onClick={() => form.handleSubmit(onSubmit)()} disabled={loading}>Save changes</Button>
           </DialogFooter>

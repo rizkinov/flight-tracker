@@ -225,7 +225,7 @@ export default function FlightsPage() {
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="w-full justify-between"
+            className="w-full justify-between transition-colors duration-200"
             style={{
               backgroundColor: color,
               borderColor: color ? color.replace('rgb', 'rgba').replace(')', ', 0.5)') : undefined,
@@ -249,7 +249,7 @@ export default function FlightsPage() {
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[300px] p-2">
+        <PopoverContent className="w-[300px] p-2 transition-all duration-200 animate-in fade-in-0 zoom-in-95">
           <div className="flex items-center border-b mb-2">
             <Input
               placeholder="Search country..."

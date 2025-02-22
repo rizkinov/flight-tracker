@@ -172,7 +172,7 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
           type="button"
           variant="outline"
           role="combobox"
-          className="w-full justify-between"
+          className="w-full justify-between transition-colors duration-200"
           onClick={handleOpen}
           style={{
             backgroundColor: color,
@@ -197,7 +197,7 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
 
         {isOpen && (
           <div 
-            className="absolute z-[99999] w-full mt-2 rounded-md border bg-popover shadow-md"
+            className="absolute z-[99999] w-full mt-2 rounded-md border bg-popover shadow-md transition-all duration-200 animate-in fade-in-0 zoom-in-95"
             style={{ minWidth: "300px" }}
           >
             <div className="p-2">
