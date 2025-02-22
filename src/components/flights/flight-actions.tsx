@@ -49,6 +49,9 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { updateFlight } from "@/lib/services/flights"
+import { DateRange } from "react-day-picker"
+import { format, addDays, differenceInDays } from "date-fns"
+import { DateRangePicker } from "@/components/ui/date-range-picker"
 
 interface Country {
   name: {
@@ -277,6 +280,12 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
     const { toast } = useToast()
     const [loading, setLoading] = useState(false)
     const router = useRouter()
+    const [dateRange, setDateRange] = useState<DateRange | undefined>(
+      flight.date ? {
+        from: new Date(flight.date),
+        to: addDays(new Date(flight.date), flight.days - 1)
+      } : undefined
+    )
 
     const form = useForm<FlightFormValues>({
       resolver: zodResolver(formSchema),
@@ -289,6 +298,31 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
         notes: flight.notes || ""
       }
     })
+
+    // Update days when date range changes
+    useEffect(() => {
+      if (dateRange?.from && dateRange?.to) {
+        const days = differenceInDays(dateRange.to, dateRange.from) + 1
+        form.setValue('days', days)
+        form.setValue('date', format(dateRange.from, 'yyyy-MM-dd'))
+      }
+    }, [dateRange, form])
+
+    // Update date range when days change
+    useEffect(() => {
+      const subscription = form.watch((value, { name }) => {
+        if (name === 'days' && dateRange?.from) {
+          const days = value.days as number
+          if (days && days > 0) {
+            setDateRange({
+              from: dateRange.from,
+              to: addDays(dateRange.from, days - 1)
+            })
+          }
+        }
+      })
+      return () => subscription.unsubscribe()
+    }, [form, dateRange])
 
     async function onSubmit(data: FlightFormValues) {
       console.log('Form submission started:', { data })
@@ -361,15 +395,26 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="date" className="text-right">
-                Date
+                Travel Period
               </Label>
-              <Input
-                id="date"
-                type="date"
-                value={form.watch('date')}
-                onChange={(e) => form.setValue('date', e.target.value)}
-                className="col-span-3"
-              />
+              <div className="col-span-3">
+                <DateRangePicker
+                  date={dateRange}
+                  onDateChange={(range) => {
+                    setDateRange(range)
+                    if (range?.from) {
+                      form.setValue('date', format(range.from, 'yyyy-MM-dd'))
+                      if (range.to) {
+                        const days = differenceInDays(range.to, range.from) + 1
+                        form.setValue('days', days)
+                      }
+                    } else {
+                      form.setValue('date', '')
+                      form.setValue('days', 1)
+                    }
+                  }}
+                />
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="from" className="text-right">
@@ -406,7 +451,16 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
                 type="number"
                 min="1"
                 value={form.watch('days')}
-                onChange={(e) => form.setValue('days', parseInt(e.target.value, 10) || 1)}
+                onChange={(e) => {
+                  const days = parseInt(e.target.value, 10) || 1
+                  form.setValue('days', days)
+                  if (dateRange?.from) {
+                    setDateRange({
+                      from: dateRange.from,
+                      to: addDays(dateRange.from, days - 1)
+                    })
+                  }
+                }}
                 className="col-span-3"
               />
             </div>
