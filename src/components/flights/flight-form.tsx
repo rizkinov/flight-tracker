@@ -26,7 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Check, ChevronsUpDown } from "lucide-react"
+import { Check, ChevronsUpDown, CalendarIcon } from "lucide-react"
 import {
   Popover,
   PopoverContent,
@@ -42,6 +42,9 @@ import {
   CommandItem,
 } from "@/components/ui/command"
 import Image from 'next/image'
+import { DateRange } from 'react-day-picker'
+import { format, addDays, differenceInDays } from 'date-fns'
+import { Calendar } from "@/components/ui/calendar"
 
 interface Country {
   name: {
@@ -93,6 +96,10 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
   const [loadingCountries, setLoadingCountries] = useState(true)
   const [usedCountries, setUsedCountries] = useState<Set<string>>(new Set())
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: addDays(new Date(), 1)
+  })
 
   // Fetch countries from REST Countries API
   useEffect(() => {
@@ -131,6 +138,31 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
       notes: ""
     }
   })
+
+  // Update days when date range changes
+  useEffect(() => {
+    if (dateRange?.from && dateRange?.to) {
+      const days = differenceInDays(dateRange.to, dateRange.from) + 1
+      form.setValue('days', days)
+      form.setValue('date', format(dateRange.from, 'yyyy-MM-dd'))
+    }
+  }, [dateRange, form])
+
+  // Update date range when days change
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'days' && dateRange?.from) {
+        const days = value.days as number
+        if (days && days > 0) {
+          setDateRange({
+            from: dateRange.from,
+            to: addDays(dateRange.from, days - 1)
+          })
+        }
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [form, dateRange])
 
   // Get color for a country based on its order of appearance
   const getCountryColor = (countryName: string) => {
@@ -364,41 +396,78 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Date</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="days"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Days in Destination</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      min="1"
-                      {...field}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value, 10)
-                        console.log('Days field changed:', { raw: e.target.value, parsed: value })
-                        field.onChange(value)
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid gap-4">
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Date Range</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !dateRange && "text-muted-foreground"
+                            )}
+                          >
+                            {dateRange?.from ? (
+                              dateRange.to ? (
+                                <>
+                                  {format(dateRange.from, "LLL dd, y")} -{" "}
+                                  {format(dateRange.to, "LLL dd, y")}
+                                </>
+                              ) : (
+                                format(dateRange.from, "LLL dd, y")
+                              )
+                            ) : (
+                              <span>Pick a date range</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          initialFocus
+                          mode="range"
+                          defaultMonth={dateRange?.from}
+                          selected={dateRange}
+                          onSelect={setDateRange}
+                          numberOfMonths={2}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="days"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Days in Destination</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min="1"
+                        {...field}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value, 10)
+                          if (value > 0) {
+                            field.onChange(value)
+                          }
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
               name="notes"
