@@ -18,12 +18,31 @@ export function DateRangePicker({
   className,
   date,
   onDateChange,
+  allowReset = true,
 }: {
   className?: string
   date?: DateRange
   onDateChange: (date: DateRange | undefined) => void
+  allowReset?: boolean
 }) {
   const [open, setOpen] = React.useState(false)
+
+  const handleSelect = (newRange: DateRange | undefined) => {
+    // If no selection, reset
+    if (!newRange) {
+      onDateChange(undefined)
+      return
+    }
+
+    // If only start date selected, set both start and end to same date
+    if (newRange.from && !newRange.to) {
+      onDateChange({ from: newRange.from, to: newRange.from })
+      return
+    }
+
+    // Otherwise just use the range as is
+    onDateChange(newRange)
+  }
 
   return (
     <div className={cn("grid gap-2", className)}>
@@ -36,6 +55,7 @@ export function DateRangePicker({
               "w-full justify-start text-left font-normal",
               !date && "text-muted-foreground"
             )}
+            onClick={() => setOpen(true)}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
             {date?.from ? (
@@ -58,44 +78,31 @@ export function DateRangePicker({
             mode="range"
             defaultMonth={date?.from}
             selected={date}
-            onSelect={(newRange) => {
-              // If no selection, reset
-              if (!newRange) {
-                onDateChange(undefined)
-                return
-              }
-
-              // If only start date selected, set both start and end to same date
-              if (newRange.from && !newRange.to) {
-                onDateChange({ from: newRange.from, to: newRange.from })
-                return
-              }
-
-              // Otherwise just use the range as is
-              onDateChange(newRange)
-            }}
+            onSelect={handleSelect}
             numberOfMonths={2}
           />
-          <div className="flex items-center justify-end gap-2 p-3 border-t">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                onDateChange(undefined)
-                setOpen(false)
-              }}
-            >
-              Clear
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => {
-                setOpen(false)
-              }}
-            >
-              Done
-            </Button>
-          </div>
+          {allowReset && (
+            <div className="flex items-center justify-end gap-2 p-3 border-t">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  onDateChange(undefined)
+                  setOpen(false)
+                }}
+              >
+                Clear
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setOpen(false)
+                }}
+              >
+                Done
+              </Button>
+            </div>
+          )}
         </PopoverContent>
       </Popover>
     </div>
