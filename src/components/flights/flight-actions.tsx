@@ -283,10 +283,8 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
     const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
       if (flight.date) {
         const startDate = new Date(flight.date)
-        return {
-          from: startDate,
-          to: addDays(startDate, flight.days - 1)
-        }
+        const endDate = addDays(startDate, flight.days - 1)
+        return { from: startDate, to: endDate }
       }
       return undefined
     })
@@ -306,6 +304,9 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
     // Reset form and date range when dialog opens/closes
     useEffect(() => {
       if (open) {
+        const startDate = new Date(flight.date)
+        const endDate = addDays(startDate, flight.days - 1)
+        
         form.reset({
           flightNumber: flight.flightNumber,
           date: flight.date,
@@ -314,10 +315,8 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
           days: flight.days,
           notes: flight.notes || ""
         })
-        setDateRange(flight.date ? {
-          from: new Date(flight.date),
-          to: addDays(new Date(flight.date), flight.days - 1)
-        } : undefined)
+        
+        setDateRange({ from: startDate, to: endDate })
       }
     }, [open, flight, form])
 
@@ -392,12 +391,6 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
 
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <Pencil className="h-4 w-4" />
-            <span className="sr-only">Edit flight</span>
-          </Button>
-        </DialogTrigger>
         <DialogContent className="max-w-2xl gap-6 z-50">
           <DialogHeader>
             <DialogTitle>Edit Flight</DialogTitle>
@@ -425,15 +418,15 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
                 <DateRangePicker
                   date={dateRange}
                   onDateChange={(range) => {
-                    setDateRange(range)
                     if (range?.from) {
-                      form.setValue('date', format(range.from, 'yyyy-MM-dd'))
-                      if (range.to) {
-                        // Add 1 to include both start and end dates
-                        const days = differenceInDays(range.to, range.from) + 1
-                        form.setValue('days', days)
-                      }
+                      const startDate = range.from
+                      const endDate = range.to || startDate
+                      setDateRange({ from: startDate, to: endDate })
+                      form.setValue('date', format(startDate, 'yyyy-MM-dd'))
+                      const days = differenceInDays(endDate, startDate) + 1
+                      form.setValue('days', days)
                     } else {
+                      setDateRange(undefined)
                       form.setValue('date', '')
                       form.setValue('days', 1)
                     }
@@ -511,7 +504,20 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
 
   return (
     <div className="flex gap-2">
-      <EditFlightDialog flight={flight} open={isEditOpen} onOpenChange={setIsEditOpen} />
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        className="h-8 w-8"
+        onClick={() => setIsEditOpen(true)}
+      >
+        <Pencil className="h-4 w-4" />
+        <span className="sr-only">Edit flight</span>
+      </Button>
+      <EditFlightDialog 
+        flight={flight} 
+        open={isEditOpen} 
+        onOpenChange={setIsEditOpen} 
+      />
 
       <AlertDialog>
         <AlertDialogTrigger asChild>
