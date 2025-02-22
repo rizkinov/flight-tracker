@@ -28,19 +28,28 @@ export function DateRangePicker({
   const [open, setOpen] = React.useState(false)
 
   const handleSelect = (newRange: DateRange | undefined) => {
-    // If no selection, reset
-    if (!newRange) {
+    // If clicking an already selected start date, clear the selection
+    if (newRange?.from && date?.from && 
+        newRange.from.getTime() === date.from.getTime() && 
+        !newRange.to) {
       onDateChange(undefined)
       return
     }
 
-    // If only start date selected, set both start and end to same date
-    if (newRange.from && !newRange.to) {
-      onDateChange({ from: newRange.from, to: newRange.from })
+    // If clicking an already selected end date, clear only the end date
+    if (newRange?.from && date?.to && 
+        newRange.to?.getTime() === date.to.getTime()) {
+      onDateChange({ from: date.from, to: undefined })
       return
     }
 
-    // Otherwise just use the range as is
+    // If only start date selected, set only start date
+    if (newRange?.from && !newRange.to) {
+      onDateChange({ from: newRange.from, to: undefined })
+      return
+    }
+
+    // Otherwise use the range as is
     onDateChange(newRange)
   }
 
@@ -55,7 +64,6 @@ export function DateRangePicker({
               "w-full justify-start text-left font-normal",
               !date && "text-muted-foreground"
             )}
-            onClick={() => setOpen(true)}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
             {date?.from ? (
@@ -80,6 +88,7 @@ export function DateRangePicker({
             selected={date}
             onSelect={handleSelect}
             numberOfMonths={2}
+            disabled={{ before: new Date() }}
           />
           {allowReset && (
             <div className="flex items-center justify-end gap-2 p-3 border-t">
