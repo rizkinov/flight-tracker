@@ -18,6 +18,7 @@ import Image from 'next/image'
 import { DateRangePicker } from "@/components/ui/date-range-picker"
 import { format, addDays, differenceInDays } from "date-fns"
 import { CalendarIcon } from "lucide-react"
+import { DateRange } from "react-day-picker"
 
 // Define a list of colors for entries
 const entryColors = [
@@ -52,6 +53,7 @@ interface BatchFlight {
   to: string
   days: number
   notes?: string
+  dateRange?: DateRange
 }
 
 export default function FlightsPage() {
@@ -63,7 +65,6 @@ export default function FlightsPage() {
   const [usedCountries, setUsedCountries] = useState<Set<string>>(new Set())
   const [countries, setCountries] = useState<Country[]>([])
   const [loadingCountries, setLoadingCountries] = useState(true)
-  const [dateRange, setDateRange] = useState<DateRange | undefined>()
 
   // Fetch countries from REST Countries API
   useEffect(() => {
@@ -114,7 +115,8 @@ export default function FlightsPage() {
         from: "Singapore",
         to: "",
         days: 1,
-        notes: ""
+        notes: "",
+        dateRange: undefined
       }
     ])
     // Update used countries to include Singapore
@@ -350,14 +352,19 @@ export default function FlightsPage() {
               />
               <div className="w-full">
                 <DateRangePicker
-                  date={dateRange}
+                  date={flight.dateRange}
                   onDateChange={(range) => {
-                    if (range?.from && range?.to) {
-                      const days = differenceInDays(range.to, range.from) + 1
-                      setDateRange(range)
-                      updateFlight(flight.id, 'date', format(range.from, 'yyyy-MM-dd'))
-                      updateFlight(flight.id, 'days', days)
-                    }
+                    setFlights(flights.map(f => {
+                      if (f.id === flight.id) {
+                        return {
+                          ...f,
+                          dateRange: range,
+                          date: range?.from ? format(range.from, 'yyyy-MM-dd') : '',
+                          days: range?.from && range?.to ? differenceInDays(range.to, range.from) + 1 : 1
+                        }
+                      }
+                      return f
+                    }))
                   }}
                 />
               </div>
@@ -375,7 +382,22 @@ export default function FlightsPage() {
                 type="number"
                 min="1"
                 value={flight.days}
-                onChange={(e) => updateFlight(flight.id, 'days', parseInt(e.target.value) || 1)}
+                onChange={(e) => {
+                  const days = parseInt(e.target.value) || 1
+                  setFlights(flights.map(f => {
+                    if (f.id === flight.id) {
+                      return {
+                        ...f,
+                        days,
+                        dateRange: f.dateRange?.from ? {
+                          from: f.dateRange.from,
+                          to: addDays(f.dateRange.from, days - 1)
+                        } : undefined
+                      }
+                    }
+                    return f
+                  }))
+                }}
               />
               <Button
                 variant="ghost"

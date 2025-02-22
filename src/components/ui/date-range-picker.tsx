@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { format } from "date-fns"
-import { Calendar as CalendarIcon } from "lucide-react"
+import { CalendarIcon } from "lucide-react"
+import { addDays, format } from "date-fns"
 import { DateRange } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
@@ -14,17 +14,15 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-interface DateRangePickerProps {
-  className?: string
-  date?: DateRange
-  onDateChange: (date: DateRange | undefined) => void
-}
-
 export function DateRangePicker({
   className,
   date,
   onDateChange,
-}: DateRangePickerProps) {
+}: {
+  className?: string
+  date?: DateRange
+  onDateChange: (date: DateRange | undefined) => void
+}) {
   const [open, setOpen] = React.useState(false)
 
   return (
@@ -43,17 +41,18 @@ export function DateRangePicker({
             {date?.from ? (
               date.to ? (
                 <>
-                  {format(date.from, "MMM d")} - {format(date.to, "MMM d")}
+                  {format(date.from, "LLL dd, y")} -{" "}
+                  {format(date.to, "LLL dd, y")}
                 </>
               ) : (
-                format(date.from, "MMM d")
+                format(date.from, "LLL dd, y")
               )
             ) : (
               <span>Pick a date</span>
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto flex flex-col space-y-4 p-3" align="start">
+        <PopoverContent className="w-auto p-0" align="start">
           <Calendar
             initialFocus
             mode="range"
@@ -62,8 +61,25 @@ export function DateRangePicker({
             onSelect={onDateChange}
             numberOfMonths={2}
           />
-          <div className="flex justify-end border-t pt-3">
-            <Button onClick={() => setOpen(false)}>Done</Button>
+          <div className="flex items-center justify-end gap-2 p-3 border-t">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                onDateChange(undefined)
+                setOpen(false)
+              }}
+            >
+              Clear
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => {
+                setOpen(false)
+              }}
+            >
+              Done
+            </Button>
           </div>
         </PopoverContent>
       </Popover>
