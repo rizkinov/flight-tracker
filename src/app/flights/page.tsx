@@ -19,6 +19,7 @@ import { FlightCalendar } from "@/components/flights/flight-calendar"
 import { DateRange } from "react-day-picker"
 import { format, addDays, differenceInDays } from "date-fns"
 import { CalendarIcon } from "lucide-react"
+import { DateRangePicker } from "@/components/ui/date-range-picker"
 
 // Define a list of colors for entries
 const entryColors = [
@@ -352,54 +353,17 @@ export default function FlightsPage() {
                 value={flight.flightNumber}
                 onChange={(e) => updateFlight(flight.id, 'flightNumber', e.target.value)}
               />
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full pl-3 text-left font-normal",
-                      !dateRange && "text-muted-foreground"
-                    )}
-                  >
-                    {dateRange?.from ? (
-                      dateRange.to ? (
-                        <>
-                          {format(dateRange.from, "LLL dd, y")} -{" "}
-                          {format(dateRange.to, "LLL dd, y")}
-                        </>
-                      ) : (
-                        format(dateRange.from, "LLL dd, y")
-                      )
-                    ) : (
-                      <span>Select travel dates</span>
-                    )}
-                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <FlightCalendar
-                    initialFocus
-                    defaultMonth={dateRange?.from}
-                    dateRange={dateRange}
-                    onSelect={(range) => {
-                      if (range?.from && range?.to) {
-                        const days = differenceInDays(range.to, range.from) + 1
-                        setDateRange(range)
-                        updateFlight(flight.id, 'date', format(range.from, 'yyyy-MM-dd'))
-                        updateFlight(flight.id, 'days', days)
-                      }
-                    }}
-                    numberOfMonths={2}
-                    onClose={() => {
-                      const popover = document.querySelector('[data-state="open"]')
-                      if (popover) {
-                        const button = popover.querySelector('button')
-                        button?.click()
-                      }
-                    }}
-                  />
-                </PopoverContent>
-              </Popover>
+              <DateRangePicker
+                date={dateRange}
+                onDateChange={(range) => {
+                  if (range?.from && range?.to) {
+                    const days = differenceInDays(range.to, range.from) + 1
+                    setDateRange(range)
+                    updateFlight(flight.id, 'date', format(range.from, 'yyyy-MM-dd'))
+                    updateFlight(flight.id, 'days', days)
+                  }
+                }}
+              />
               <CountrySelect
                 value={flight.from}
                 onChange={(value) => updateFlight(flight.id, 'from', value)}

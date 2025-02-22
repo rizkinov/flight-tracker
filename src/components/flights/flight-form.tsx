@@ -45,6 +45,7 @@ import Image from 'next/image'
 import { DateRange } from 'react-day-picker'
 import { format, addDays, differenceInDays } from 'date-fns'
 import { FlightCalendar } from "./flight-calendar"
+import { DateRangePicker } from "@/components/ui/date-range-picker"
 
 interface Country {
   name: {
@@ -403,51 +404,17 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Travel Period</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !dateRange && "text-muted-foreground"
-                            )}
-                          >
-                            {dateRange?.from ? (
-                              dateRange.to ? (
-                                <>
-                                  {format(dateRange.from, "LLL dd, y")} -{" "}
-                                  {format(dateRange.to, "LLL dd, y")}
-                                </>
-                              ) : (
-                                format(dateRange.from, "LLL dd, y")
-                              )
-                            ) : (
-                              <span>Select travel dates</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <FlightCalendar
-                          initialFocus
-                          defaultMonth={dateRange?.from}
-                          dateRange={dateRange}
-                          onSelect={(range) => {
-                            setDateRange(range || { from: new Date(), to: addDays(new Date(), 1) })
-                          }}
-                          numberOfMonths={2}
-                          onClose={() => {
-                            const popover = document.querySelector('[data-state="open"]')
-                            if (popover) {
-                              const button = popover.querySelector('button')
-                              button?.click()
-                            }
-                          }}
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <DateRangePicker
+                      date={dateRange}
+                      onDateChange={(range) => {
+                        if (range?.from && range?.to) {
+                          const days = differenceInDays(range.to, range.from) + 1
+                          setDateRange(range)
+                          field.onChange(format(range.from, 'yyyy-MM-dd'))
+                          form.setValue('days', days)
+                        }
+                      }}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
