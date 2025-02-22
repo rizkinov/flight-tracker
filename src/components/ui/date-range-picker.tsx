@@ -18,44 +18,14 @@ export function DateRangePicker({
   className,
   date,
   onDateChange,
-  allowReset = true,
 }: {
   className?: string
   date?: DateRange
   onDateChange: (date: DateRange | undefined) => void
-  allowReset?: boolean
 }) {
-  const [open, setOpen] = React.useState(false)
-
-  const handleSelect = (newRange: DateRange | undefined) => {
-    // If clicking an already selected start date, clear the selection
-    if (newRange?.from && date?.from && 
-        newRange.from.getTime() === date.from.getTime() && 
-        !newRange.to) {
-      onDateChange(undefined)
-      return
-    }
-
-    // If clicking an already selected end date, clear only the end date
-    if (newRange?.from && date?.to && 
-        newRange.to?.getTime() === date.to.getTime()) {
-      onDateChange({ from: date.from, to: undefined })
-      return
-    }
-
-    // If only start date selected, set only start date
-    if (newRange?.from && !newRange.to) {
-      onDateChange({ from: newRange.from, to: undefined })
-      return
-    }
-
-    // Otherwise use the range as is
-    onDateChange(newRange)
-  }
-
   return (
     <div className={cn("grid gap-2", className)}>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover>
         <PopoverTrigger asChild>
           <Button
             id="date"
@@ -86,32 +56,9 @@ export function DateRangePicker({
             mode="range"
             defaultMonth={date?.from}
             selected={date}
-            onSelect={handleSelect}
+            onSelect={onDateChange}
             numberOfMonths={2}
-            disabled={{ before: new Date() }}
           />
-          {allowReset && (
-            <div className="flex items-center justify-end gap-2 p-3 border-t">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  onDateChange(undefined)
-                  setOpen(false)
-                }}
-              >
-                Clear
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => {
-                  setOpen(false)
-                }}
-              >
-                Done
-              </Button>
-            </div>
-          )}
         </PopoverContent>
       </Popover>
     </div>
