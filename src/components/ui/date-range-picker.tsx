@@ -25,6 +25,32 @@ export function DateRangePicker({
 }) {
   const [open, setOpen] = React.useState(false)
 
+  // Custom handler to properly handle date selections
+  const handleSelect = (range: DateRange | undefined) => {
+    // If no range is provided, clear the selection
+    if (!range) {
+      onSelect(undefined)
+      return
+    }
+
+    // If we have a selected range and clicked date is earlier, start new range
+    if (selected?.from && range.from && range.from < selected.from) {
+      onSelect({ from: range.from, to: undefined })
+      return
+    }
+
+    // If clicking the same start date, clear selection
+    if (selected?.from && range.from && 
+        selected.from.getTime() === range.from.getTime() && 
+        (!range.to || range.to.getTime() === range.from.getTime())) {
+      onSelect(undefined)
+      return
+    }
+
+    // Otherwise, use the range as is
+    onSelect(range)
+  }
+
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover open={open} onOpenChange={setOpen}>
@@ -58,7 +84,7 @@ export function DateRangePicker({
             mode="range"
             defaultMonth={selected?.from}
             selected={selected}
-            onSelect={onSelect}
+            onSelect={handleSelect}
             numberOfMonths={2}
             disabled={(date) => date < new Date('1900-01-01')}
           />
