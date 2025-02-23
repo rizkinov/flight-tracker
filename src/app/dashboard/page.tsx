@@ -1,18 +1,23 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { FlightList } from "@/components/flights/flight-list"
-import { StatsOverview } from "@/components/flights/stats-overview"
-import { EmptyState } from "@/components/flights/empty-state"
-import { Trash2, FileDown } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
-import { useState } from "react"
-import * as XLSX from 'xlsx'
-import jsPDF from 'jspdf'
-import 'jspdf-autotable'
-import { UserOptions } from 'jspdf-autotable'
+import { Button } from "@/components/ui/button"
+import { Plus, Save, Trash2, Check, ChevronsUpDown, FileDown, CalendarIcon } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { useToast } from "@/components/ui/use-toast"
+import { createFlight } from "@/lib/services/flights"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import Image from 'next/image'
+import { DateRangePicker } from "@/components/ui/date-range-picker"
+import { format, addDays, differenceInDays } from "date-fns"
+import { DateRange } from "react-day-picker"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,7 +36,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { deleteAllFlights, getUserFlights } from "@/lib/services/flights"
-import { useToast } from "@/components/ui/use-toast"
+import { FlightList } from "@/components/flights/flight-list"
+import { StatsOverview } from "@/components/flights/stats-overview"
+import { EmptyState } from "@/components/flights/empty-state"
+import * as XLSX from 'xlsx'
+import jsPDF from 'jspdf'
+import 'jspdf-autotable'
+import { UserOptions } from 'jspdf-autotable'
 import { BatchFlightForm } from "@/components/flights/batch-flight-form"
 
 // Extend jsPDF type to include autoTable
