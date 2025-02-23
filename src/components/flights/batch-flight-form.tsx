@@ -336,23 +336,31 @@ export function BatchFlightForm({ onSuccess }: BatchFlightFormProps) {
                     newRange: range 
                   })
 
-                  // First update the date range
-                  updateFlight(flight.id, 'dateRange', range)
+                  // Create a new flights array with the updated flight
+                  const updatedFlights = flights.map(f => {
+                    if (f.id === flight.id) {
+                      const updatedFlight = { ...f, dateRange: range };
+                      
+                      // Update days based on the range
+                      if (range?.from && range?.to) {
+                        const days = differenceInDays(range.to, range.from) + 1;
+                        console.log('Updating days based on range:', { days, range });
+                        updatedFlight.days = days;
+                      } else if (range?.from) {
+                        console.log('Only start date selected, setting days to 1');
+                        updatedFlight.days = 1;
+                      } else {
+                        console.log('Range cleared, resetting days to 1');
+                        updatedFlight.days = 1;
+                      }
+                      
+                      return updatedFlight;
+                    }
+                    return f;
+                  });
 
-                  // Then update days based on the range
-                  if (range?.from && range?.to) {
-                    const days = differenceInDays(range.to, range.from) + 1
-                    console.log('Updating days based on range:', { days, range })
-                    updateFlight(flight.id, 'days', days)
-                  } else if (range?.from) {
-                    // If only start date is selected, set days to 1
-                    console.log('Only start date selected, setting days to 1')
-                    updateFlight(flight.id, 'days', 1)
-                  } else {
-                    // If range is cleared
-                    console.log('Range cleared, resetting days to 1')
-                    updateFlight(flight.id, 'days', 1)
-                  }
+                  // Update state in one go to avoid race conditions
+                  setFlights(updatedFlights);
                 }}
               />
             </div>
@@ -371,21 +379,28 @@ export function BatchFlightForm({ onSuccess }: BatchFlightFormProps) {
               min="1"
               value={flight.days}
               onChange={(e) => {
-                const days = parseInt(e.target.value) || 1
-                console.log('Days input changed:', { days, currentDateRange: flight.dateRange })
-                
-                // First update the days
-                updateFlight(flight.id, 'days', days)
-                
-                // Then update the date range if we have a start date
-                if (flight.dateRange?.from) {
-                  const newRange = {
-                    from: flight.dateRange.from,
-                    to: addDays(flight.dateRange.from, days - 1)
+                const days = parseInt(e.target.value) || 1;
+                console.log('Days input changed:', { days, currentDateRange: flight.dateRange });
+
+                // Update both days and date range in one state update
+                setFlights(flights.map(f => {
+                  if (f.id === flight.id) {
+                    const updatedFlight = { ...f, days };
+                    
+                    // Update date range if we have a start date
+                    if (f.dateRange?.from) {
+                      const newRange = {
+                        from: f.dateRange.from,
+                        to: addDays(f.dateRange.from, days - 1)
+                      };
+                      console.log('Updating date range based on days:', { newRange });
+                      updatedFlight.dateRange = newRange;
+                    }
+                    
+                    return updatedFlight;
                   }
-                  console.log('Updating date range based on days:', { newRange })
-                  updateFlight(flight.id, 'dateRange', newRange)
-                }
+                  return f;
+                }));
               }}
             />
             <Button

@@ -27,6 +27,11 @@ export function DateRangePicker({
 
   console.log('DateRangePicker render:', { selected, open })
 
+  // Keep internal state in sync with props
+  React.useEffect(() => {
+    console.log('DateRangePicker selected prop changed:', selected)
+  }, [selected])
+
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover open={open} onOpenChange={setOpen}>
@@ -62,6 +67,7 @@ export function DateRangePicker({
             selected={selected}
             onSelect={(range) => {
               console.log('Calendar onSelect:', { range, currentSelected: selected })
+              
               if (!range) {
                 console.log('Range cleared')
                 onSelect(undefined)
@@ -78,7 +84,8 @@ export function DateRangePicker({
               // If we only have a start date
               if (range.from && !range.to) {
                 console.log('Only start date, setting end to same:', range.from)
-                onSelect({ from: range.from, to: range.from })
+                const newRange = { from: range.from, to: range.from }
+                onSelect(newRange)
                 return
               }
             }}
