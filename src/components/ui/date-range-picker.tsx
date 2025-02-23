@@ -73,19 +73,18 @@ export function DateRangePicker({
                 onSelect(undefined)
                 return
               }
-              
-              // If we have both dates or neither, just pass through
-              if ((range.from && range.to) || (!range.from && !range.to)) {
-                console.log('Complete range or cleared:', range)
+
+              // If we have both dates, just pass through
+              if (range.from && range.to) {
+                console.log('Complete range:', range)
                 onSelect(range)
                 return
               }
-              
+
               // If we only have a start date
               if (range.from && !range.to) {
-                console.log('Only start date, setting end to same:', range.from)
-                const newRange = { from: range.from, to: range.from }
-                onSelect(newRange)
+                console.log('Single date selected:', range.from)
+                onSelect({ from: range.from, to: range.from })
                 return
               }
             }}
