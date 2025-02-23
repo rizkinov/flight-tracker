@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { FlightList } from "@/components/flights/flight-list"
 import { StatsOverview } from "@/components/flights/stats-overview"
 import { EmptyState } from "@/components/flights/empty-state"
-import { Plus, Save, Trash2, FileDown } from "lucide-react"
+import { Trash2, FileDown } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { useState } from "react"
 import * as XLSX from 'xlsx'
@@ -33,22 +33,10 @@ import {
 import { deleteAllFlights, getUserFlights } from "@/lib/services/flights"
 import { useToast } from "@/components/ui/use-toast"
 import { BatchFlightForm } from "@/components/flights/batch-flight-form"
-import { DateRange } from "react-day-picker"
-import { format, addDays, differenceInDays } from "date-fns"
 
 // Extend jsPDF type to include autoTable
 interface jsPDFWithAutoTable extends jsPDF {
   autoTable: (options: UserOptions) => jsPDF;
-}
-
-interface DashboardFlight {
-  id: string
-  flightNumber: string
-  dateRange: DateRange | undefined
-  from: string
-  to: string
-  days: number
-  notes?: string
 }
 
 export default function DashboardPage() {
