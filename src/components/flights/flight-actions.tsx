@@ -435,17 +435,24 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
                           <DateRangePicker
                             selected={dateRange}
                             onSelect={(range) => {
-                              setDateRange(range)
+                              console.log('EditFlightDialog DateRangePicker onSelect:', { 
+                                currentRange: dateRange,
+                                newRange: range 
+                              })
                               if (range?.from) {
-                                field.onChange(format(range.from, 'yyyy-MM-dd'))
+                                // Always calculate days based on the selected range
                                 const days = range.to ? 
                                   differenceInDays(range.to, range.from) + 1 : 
-                                  flight.days
+                                  1
+                                console.log('Setting new range and days:', { range, days })
+                                setDateRange(range)
                                 form.setValue('days', days)
+                                form.setValue('date', format(range.from, 'yyyy-MM-dd'))
                               } else {
-                                field.onChange('')
-                                form.setValue('days', 1)
+                                console.log('Clearing date range')
                                 setDateRange(undefined)
+                                form.setValue('days', 1)
+                                form.setValue('date', '')
                               }
                             }}
                           />
@@ -498,7 +505,7 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
                   </FormItem>
                 )}
               />
-              <div className="flex justify-end">
+              <div className="flex gap-2 justify-end">
                 <Button 
                   type="submit" 
                   disabled={loading}
@@ -514,7 +521,7 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
   }
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 justify-end">
       <Button 
         variant="ghost" 
         size="icon" 
@@ -524,11 +531,6 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
         <Pencil className="h-4 w-4" />
         <span className="sr-only">Edit flight</span>
       </Button>
-      <EditFlightDialog 
-        flight={flight} 
-        open={isEditOpen} 
-        onOpenChange={setIsEditOpen} 
-      />
 
       <AlertDialog>
         <AlertDialogTrigger asChild>
