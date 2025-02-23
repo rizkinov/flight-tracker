@@ -2,12 +2,11 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { FlightList } from "@/components/flights/flight-list"
 import { StatsOverview } from "@/components/flights/stats-overview"
 import { EmptyState } from "@/components/flights/empty-state"
-import { Plus, Trash2, FileDown } from "lucide-react"
+import { Plus, Save, Trash2, FileDown } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { useState } from "react"
 import * as XLSX from 'xlsx'
@@ -33,7 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { deleteAllFlights, getUserFlights } from "@/lib/services/flights"
 import { useToast } from "@/components/ui/use-toast"
-import { FlightForm } from "@/components/flights/flight-form"
+import { BatchFlightForm } from "@/components/flights/batch-flight-form"
 
 // Extend jsPDF type to include autoTable
 interface jsPDFWithAutoTable extends jsPDF {
@@ -46,7 +45,6 @@ export default function DashboardPage() {
   const router = useRouter()
   const [hasFlights, setHasFlights] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [showAddFlight, setShowAddFlight] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
 
   const refreshData = async () => {
@@ -188,6 +186,10 @@ export default function DashboardPage() {
     return null // Will be redirected by useEffect
   }
 
+  if (!hasFlights) {
+    return <EmptyState />
+  }
+
   return (
     <div className="flex flex-col space-y-8">
       <div className="flex flex-col space-y-2">
@@ -196,76 +198,78 @@ export default function DashboardPage() {
           Overview of your travel statistics and flight records.
         </p>
       </div>
-      
-      {hasFlights ? (
-        <>
-          <StatsOverview key={refreshKey} />
-          <div>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold tracking-tight">Flight History</h2>
-              <div className="flex items-center gap-2">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="outline" className="text-destructive">
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Reset Data
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete all your flight records
-                        and reset your dashboard to its initial state.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={handleReset}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        Reset All Data
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline">
-                      <FileDown className="mr-2 h-4 w-4" />
-                      Export
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleExport('pdf')}>
-                      Export as PDF
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleExport('excel')}>
-                      Export as Excel
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+      {/* Statistics */}
+      <StatsOverview key={refreshKey} />
 
-                <Button onClick={() => setShowAddFlight(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Flight
-                </Button>
-              </div>
-            </div>
-            <FlightList key={refreshKey} onFlightsChange={setHasFlights} />
+      {/* Batch Add Flights */}
+      <div>
+        <div className="flex flex-col space-y-2 mb-6">
+          <h2 className="text-2xl font-semibold tracking-tight">Add Flights</h2>
+          <p className="text-muted-foreground">
+            Add multiple flights at once to track your travel days.
+          </p>
+        </div>
+        <BatchFlightForm onSuccess={refreshData} />
+      </div>
+
+      {/* Flight History */}
+      <div>
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col space-y-2">
+            <h2 className="text-2xl font-semibold tracking-tight">Flight History</h2>
+            <p className="text-muted-foreground">
+              A list of your recent flights.
+            </p>
           </div>
-        </>
-      ) : (
-        <EmptyState />
-      )}
+          <div className="flex items-center gap-2">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" className="text-destructive">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Reset Data
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete all your flight records
+                    and reset your dashboard to its initial state.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleReset}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Reset All Data
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
 
-      <FlightForm 
-        open={showAddFlight} 
-        onOpenChange={setShowAddFlight}
-        onSuccess={refreshData}
-      />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <FileDown className="mr-2 h-4 w-4" />
+                  Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                  Export as PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport('excel')}>
+                  Export as Excel
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+        <FlightList key={refreshKey} onFlightsChange={setHasFlights} />
+      </div>
     </div>
   )
 } 
