@@ -531,6 +531,11 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
         <Pencil className="h-4 w-4" />
         <span className="sr-only">Edit flight</span>
       </Button>
+      <EditFlightDialog 
+        flight={flight} 
+        open={isEditOpen} 
+        onOpenChange={setIsEditOpen} 
+      />
 
       <AlertDialog>
         <AlertDialogTrigger asChild>
