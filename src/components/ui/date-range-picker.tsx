@@ -66,25 +66,27 @@ export function DateRangePicker({
             defaultMonth={selected?.from}
             selected={selected}
             onSelect={(range) => {
-              console.log('Calendar onSelect:', { range, currentSelected: selected })
-              
               if (!range) {
-                console.log('Range cleared')
                 onSelect(undefined)
                 return
               }
 
-              // If we have both dates, just pass through
+              // If we have both dates, use them directly
               if (range.from && range.to) {
-                console.log('Complete range:', range)
-                onSelect(range)
+                // Ensure the end date is inclusive by using the actual selected date
+                onSelect({
+                  from: range.from,
+                  to: range.to
+                })
                 return
               }
 
-              // If we only have a start date
+              // If we only have a start date, set it as both start and end
               if (range.from && !range.to) {
-                console.log('Single date selected:', range.from)
-                onSelect({ from: range.from, to: range.from })
+                onSelect({
+                  from: range.from,
+                  to: range.from
+                })
                 return
               }
             }}
@@ -95,7 +97,6 @@ export function DateRangePicker({
               variant="outline"
               size="sm"
               onClick={() => {
-                console.log('Clear button clicked')
                 onSelect(undefined)
                 setOpen(false)
               }}
@@ -105,7 +106,6 @@ export function DateRangePicker({
             <Button
               size="sm"
               onClick={() => {
-                console.log('Done button clicked')
                 setOpen(false)
               }}
             >

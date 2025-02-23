@@ -323,19 +323,25 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
       }
     }, [open, flight, form])
 
+    // Update days when date range changes
+    useEffect(() => {
+      if (dateRange?.from && dateRange.to) {
+        const days = Math.round((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24)) + 1
+        form.setValue('days', days)
+        form.setValue('date', format(dateRange.from, 'yyyy-MM-dd'))
+      }
+    }, [dateRange, form])
+
     // Update date range when days change
     useEffect(() => {
       const subscription = form.watch((value, { name }) => {
-        if (name === 'days') {
+        if (name === 'days' && dateRange?.from) {
           const days = value.days as number
-          if (days && days > 0 && dateRange?.from) {
-            console.log('Days changed:', { days, currentRange: dateRange })
-            const newRange = {
+          if (days && days > 0) {
+            setDateRange({
               from: dateRange.from,
               to: addDays(dateRange.from, days - 1)
-            }
-            console.log('Updating date range based on days:', { newRange })
-            setDateRange(newRange)
+            })
           }
         }
       })
@@ -440,36 +446,11 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
                           <DateRangePicker
                             selected={dateRange}
                             onSelect={(range) => {
-                              console.log('EditFlightDialog DateRangePicker onSelect:', { 
-                                currentRange: dateRange,
-                                newRange: range 
-                              })
-
-                              // First update the date range
                               setDateRange(range)
-
-                              if (!range) {
-                                console.log('Clearing date range')
-                                form.setValue('days', 1)
+                              if (range?.from) {
+                                form.setValue('date', format(range.from, 'yyyy-MM-dd'))
+                              } else {
                                 form.setValue('date', '')
-                                return
-                              }
-
-                              // If we have both dates, calculate days normally
-                              if (range.from && range.to) {
-                                const days = differenceInDays(range.to, range.from) + 1
-                                console.log('Setting complete range:', { range, days })
-                                form.setValue('days', days)
-                                form.setValue('date', format(range.from, 'yyyy-MM-dd'))
-                                return
-                              }
-
-                              // If we only have a start date
-                              if (range.from && !range.to) {
-                                console.log('Setting single date:', range.from)
-                                form.setValue('days', 1)
-                                form.setValue('date', format(range.from, 'yyyy-MM-dd'))
-                                return
                               }
                             }}
                           />
