@@ -323,30 +323,25 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
       }
     }, [open, flight, form])
 
-    // Update days when date range changes
+    // Update form values when date range changes
     useEffect(() => {
       if (dateRange?.from && dateRange.to) {
         const days = Math.round((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24)) + 1
-        form.setValue('days', days)
-        form.setValue('date', format(dateRange.from, 'yyyy-MM-dd'))
+        form.setValue('days', days, { shouldValidate: true })
+        form.setValue('date', format(dateRange.from, 'yyyy-MM-dd'), { shouldValidate: true })
       }
-    }, [dateRange, form])
+    }, [dateRange])
 
-    // Update date range when days change
-    useEffect(() => {
-      const subscription = form.watch((value, { name }) => {
-        if (name === 'days' && dateRange?.from) {
-          const days = value.days as number
-          if (days && days > 0) {
-            setDateRange({
-              from: dateRange.from,
-              to: addDays(dateRange.from, days - 1)
-            })
-          }
-        }
-      })
-      return () => subscription.unsubscribe()
-    }, [form, dateRange?.from])
+    // Update date range when days change manually
+    const handleDaysChange = (value: number) => {
+      if (value > 0 && dateRange?.from) {
+        const newEndDate = addDays(dateRange.from, value - 1)
+        setDateRange({
+          from: dateRange.from,
+          to: newEndDate
+        })
+      }
+    }
 
     async function onSubmit(data: FlightFormValues) {
       if (!user) return
@@ -445,14 +440,7 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
                         <div className="w-full">
                           <DateRangePicker
                             selected={dateRange}
-                            onSelect={(range) => {
-                              setDateRange(range)
-                              if (range?.from) {
-                                form.setValue('date', format(range.from, 'yyyy-MM-dd'))
-                              } else {
-                                form.setValue('date', '')
-                              }
-                            }}
+                            onSelect={setDateRange}
                           />
                         </div>
                       </FormControl>
@@ -476,6 +464,7 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
                             const value = parseInt(e.target.value, 10)
                             if (value > 0) {
                               field.onChange(value)
+                              handleDaysChange(value)
                             }
                           }}
                         />
