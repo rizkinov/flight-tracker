@@ -118,6 +118,7 @@ export function BatchFlightForm({ onSuccess }: BatchFlightFormProps) {
   }
 
   const updateFlight = (id: string, field: keyof BatchFlight, value: string | number | DateRange | undefined) => {
+    console.log('updateFlight called:', { id, field, value })
     setFlights(flights.map(flight => {
       if (flight.id !== id) return flight
       
@@ -128,6 +129,7 @@ export function BatchFlightForm({ onSuccess }: BatchFlightFormProps) {
         setUsedCountries(prev => new Set(Array.from(prev).concat(value)))
       }
       
+      console.log('Flight updated:', { id, updatedFlight })
       return updatedFlight
     }))
   }
@@ -328,13 +330,20 @@ export function BatchFlightForm({ onSuccess }: BatchFlightFormProps) {
               <DateRangePicker
                 selected={flight.dateRange}
                 onSelect={(range) => {
+                  console.log('BatchFlightForm DateRangePicker onSelect:', { 
+                    flightId: flight.id, 
+                    currentRange: flight.dateRange,
+                    newRange: range 
+                  })
                   if (range?.from) {
                     updateFlight(flight.id, 'dateRange', range)
                     const days = range.to ? 
                       differenceInDays(range.to, range.from) + 1 : 
                       flight.days
+                    console.log('Updating days:', { days })
                     updateFlight(flight.id, 'days', days)
                   } else {
+                    console.log('Clearing date range')
                     updateFlight(flight.id, 'dateRange', undefined)
                     updateFlight(flight.id, 'days', 1)
                   }

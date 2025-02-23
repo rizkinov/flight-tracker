@@ -415,14 +415,20 @@ export function FlightForm({ open, onOpenChange, onSuccess }: FlightFormProps) {
                         <DateRangePicker
                           selected={dateRange}
                           onSelect={(range) => {
+                            console.log('FlightForm DateRangePicker onSelect:', { 
+                              currentRange: dateRange,
+                              newRange: range 
+                            })
                             setDateRange(range)
                             if (range?.from) {
                               field.onChange(format(range.from, 'yyyy-MM-dd'))
                               const days = range.to ? 
                                 differenceInDays(range.to, range.from) + 1 : 
                                 1
+                              console.log('Updating days:', { days })
                               form.setValue('days', days)
                             } else {
+                              console.log('Clearing date range')
                               field.onChange('')
                               form.setValue('days', 1)
                               setDateRange(undefined)

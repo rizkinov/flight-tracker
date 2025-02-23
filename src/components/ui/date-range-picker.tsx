@@ -25,6 +25,8 @@ export function DateRangePicker({
 }) {
   const [open, setOpen] = React.useState(false)
 
+  console.log('DateRangePicker render:', { selected, open })
+
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover open={open} onOpenChange={setOpen}>
@@ -58,7 +60,10 @@ export function DateRangePicker({
             mode="range"
             defaultMonth={selected?.from}
             selected={selected}
-            onSelect={onSelect}
+            onSelect={(range) => {
+              console.log('Calendar onSelect:', { range })
+              onSelect(range)
+            }}
             numberOfMonths={2}
           />
           <div className="flex items-center justify-end gap-2 p-3 border-t">
@@ -66,6 +71,7 @@ export function DateRangePicker({
               variant="outline"
               size="sm"
               onClick={() => {
+                console.log('Clear button clicked')
                 onSelect(undefined)
                 setOpen(false)
               }}
@@ -75,8 +81,9 @@ export function DateRangePicker({
             <Button
               size="sm"
               onClick={() => {
+                console.log('Done button clicked')
                 if (selected?.from && !selected.to) {
-                  // If only start date is selected, set end date to same day
+                  console.log('Setting end date to same as start date:', selected.from)
                   onSelect({ from: selected.from, to: selected.from })
                 }
                 setOpen(false)
