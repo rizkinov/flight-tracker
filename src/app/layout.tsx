@@ -22,7 +22,7 @@ function RootLayoutContent({ children }: { children: React.ReactNode }) {
     <div className="relative flex min-h-screen flex-col">
       <Header />
       <div className="flex-1">
-        <div className="container max-w-4xl py-6">
+        <div className="container max-w-6xl py-6">
           <main className="relative py-6">
             <div className="mx-auto w-full min-w-0">
               {children}
