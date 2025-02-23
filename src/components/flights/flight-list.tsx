@@ -14,6 +14,7 @@ import { FlightActions } from "./flight-actions"
 import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/lib/auth-context"
 import { Flight, getUserFlights, deleteFlight as deleteFlightService, updateFlight as updateFlightService } from "@/lib/services/flights"
+import { format } from "date-fns"
 
 interface FlightListProps {
   onFlightsChange?: (hasFlights: boolean) => void
@@ -124,7 +125,7 @@ export function FlightList({ onFlightsChange }: FlightListProps) {
             <TableCell className="truncate" title={flight.to}>
               {flight.to.length > 15 ? `${flight.to.slice(0, 15)}...` : flight.to}
             </TableCell>
-            <TableCell>{flight.date}</TableCell>
+            <TableCell>{format(new Date(flight.date), 'LLL dd, y')}</TableCell>
             <TableCell>{flight.days}</TableCell>
             <TableCell className="max-w-[200px] truncate">
               {flight.notes}

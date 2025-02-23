@@ -33,10 +33,22 @@ import {
 import { deleteAllFlights, getUserFlights } from "@/lib/services/flights"
 import { useToast } from "@/components/ui/use-toast"
 import { BatchFlightForm } from "@/components/flights/batch-flight-form"
+import { DateRange } from "react-day-picker"
+import { format, addDays, differenceInDays } from "date-fns"
 
 // Extend jsPDF type to include autoTable
 interface jsPDFWithAutoTable extends jsPDF {
   autoTable: (options: UserOptions) => jsPDF;
+}
+
+interface DashboardFlight {
+  id: string
+  flightNumber: string
+  dateRange: DateRange | undefined
+  from: string
+  to: string
+  days: number
+  notes?: string
 }
 
 export default function DashboardPage() {
