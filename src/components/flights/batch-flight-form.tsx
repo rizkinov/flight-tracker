@@ -329,8 +329,17 @@ export function BatchFlightForm({ onSuccess }: BatchFlightFormProps) {
                 selected={flight.dateRange}
                 onSelect={(range) => {
                   updateFlight(flight.id, 'dateRange', range)
-                  if (range?.from && range.to) {
-                    updateFlight(flight.id, 'days', differenceInDays(range.to, range.from) + 1)
+                  if (range?.from) {
+                    if (range.to) {
+                      // Both start and end dates selected
+                      updateFlight(flight.id, 'days', differenceInDays(range.to, range.from) + 1)
+                    } else {
+                      // Only start date selected, keep current days
+                      updateFlight(flight.id, 'dateRange', {
+                        from: range.from,
+                        to: addDays(range.from, flight.days - 1)
+                      })
+                    }
                   }
                 }}
               />
