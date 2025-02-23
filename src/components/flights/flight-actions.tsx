@@ -440,7 +440,7 @@ export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) 
                                 field.onChange(format(range.from, 'yyyy-MM-dd'))
                                 const days = range.to ? 
                                   differenceInDays(range.to, range.from) + 1 : 
-                                  1
+                                  flight.days
                                 form.setValue('days', days)
                               } else {
                                 field.onChange('')
