@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts"
 import { Progress } from "@/components/ui/progress"
 import { Flight } from "@/lib/services/flights"
+import { getFlightDaysInYear } from "@/lib/flight-utils"
 
 interface CountryData {
   name: string
@@ -40,7 +41,7 @@ export function StatsOverview({ flights, selectedYear }: StatsOverviewProps) {
     let mostVisitedDays = 0
 
     flights.forEach(flight => {
-      const days = flight.days || 1 // Default to 1 day if not specified
+      const days = getFlightDaysInYear(flight, selectedYear) || 1
       totalDays += days
 
       // Update country stats
@@ -79,7 +80,7 @@ export function StatsOverview({ flights, selectedYear }: StatsOverviewProps) {
       mostVisitedCountry,
       totalDays
     }
-  }, [flights])
+  }, [flights, selectedYear])
 
   // Tax residency calculations
   const isLeapYear = (year: number) => {

@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { deleteAllFlights, getUserFlights, Flight } from "@/lib/services/flights"
+import { flightOverlapsYear, getFlightEndDate, getFlightDaysInYear } from "@/lib/flight-utils"
 import { FlightList } from "@/components/flights/flight-list"
 import { StatsOverview } from "@/components/flights/stats-overview"
 import { EmptyState } from "@/components/flights/empty-state"
@@ -50,14 +51,17 @@ export default function DashboardPage() {
 
   const availableYears = useMemo(() => {
     const currentYear = new Date().getFullYear()
-    const yearsFromFlights = new Set(allFlights.map(f => parseInt(f.date.substring(0, 4), 10)))
-    yearsFromFlights.add(currentYear)
-    return Array.from(yearsFromFlights).sort((a, b) => a - b)
+    const years = new Set<number>()
+    years.add(currentYear)
+    allFlights.forEach(f => {
+      years.add(parseInt(f.date.substring(0, 4), 10))
+      years.add(getFlightEndDate(f).getFullYear())
+    })
+    return Array.from(years).sort((a, b) => a - b)
   }, [allFlights])
 
   const filteredFlights = useMemo(() => {
-    const yearStr = String(selectedYear)
-    return allFlights.filter(f => f.date.startsWith(yearStr))
+    return allFlights.filter(f => flightOverlapsYear(f, selectedYear))
   }, [allFlights, selectedYear])
 
   const loadFlights = async () => {
@@ -110,7 +114,8 @@ export default function DashboardPage() {
         'Date': flight.date,
         'From': flight.from,
         'To': flight.to,
-        'Days': flight.days,
+        'Days': getFlightDaysInYear(flight, selectedYear),
+        'Total Days': flight.days,
         'Notes': flight.notes || ''
       }))
 
@@ -129,7 +134,7 @@ export default function DashboardPage() {
         doc.text(`Generated on ${new Date().toLocaleString()}`, 14, 30)
 
         doc.autoTable({
-          head: [['Flight Number', 'Date', 'From', 'To', 'Days', 'Notes']],
+          head: [['Flight Number', 'Date', 'From', 'To', 'Days', 'Total Days', 'Notes']],
           body: data.map(row => Object.values(row)),
           startY: 40,
         })
@@ -280,7 +285,7 @@ export default function DashboardPage() {
             </DropdownMenu>
           </div>
         </div>
-        <FlightList flights={filteredFlights} onFlightMutated={refreshData} />
+        <FlightList flights={filteredFlights} selectedYear={selectedYear} onFlightMutated={refreshData} />
       </div>
     </div>
   )

@@ -12,14 +12,16 @@ import {
 import { FlightActions } from "./flight-actions"
 import { useToast } from "@/components/ui/use-toast"
 import { Flight, deleteFlight as deleteFlightService, updateFlight as updateFlightService } from "@/lib/services/flights"
+import { getFlightDaysInYear } from "@/lib/flight-utils"
 import { format } from "date-fns"
 
 interface FlightListProps {
   flights: Flight[]
+  selectedYear: number
   onFlightMutated?: () => void
 }
 
-export function FlightList({ flights, onFlightMutated }: FlightListProps) {
+export function FlightList({ flights, selectedYear, onFlightMutated }: FlightListProps) {
   const { toast } = useToast()
 
   const handleEdit = async (flight: Flight) => {
@@ -92,7 +94,14 @@ export function FlightList({ flights, onFlightMutated }: FlightListProps) {
               {flight.to.length > 15 ? `${flight.to.slice(0, 15)}...` : flight.to}
             </TableCell>
             <TableCell>{format(new Date(flight.date), 'LLL dd, y')}</TableCell>
-            <TableCell>{flight.days}</TableCell>
+            <TableCell>
+              {(() => {
+                const daysInYear = getFlightDaysInYear(flight, selectedYear)
+                return daysInYear < flight.days
+                  ? <span title={`${flight.days} days total`}>{daysInYear} <span className="text-muted-foreground">of {flight.days}</span></span>
+                  : flight.days
+              })()}
+            </TableCell>
             <TableCell className="max-w-[200px] truncate">
               {flight.notes}
             </TableCell>
