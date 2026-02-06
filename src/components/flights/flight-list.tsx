@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
 import {
   Table,
   TableBody,
@@ -12,45 +11,16 @@ import {
 } from "@/components/ui/table"
 import { FlightActions } from "./flight-actions"
 import { useToast } from "@/components/ui/use-toast"
-import { useAuth } from "@/lib/auth-context"
-import { Flight, getUserFlights, deleteFlight as deleteFlightService, updateFlight as updateFlightService } from "@/lib/services/flights"
+import { Flight, deleteFlight as deleteFlightService, updateFlight as updateFlightService } from "@/lib/services/flights"
 import { format } from "date-fns"
 
 interface FlightListProps {
-  onFlightsChange?: (hasFlights: boolean) => void
+  flights: Flight[]
+  onFlightMutated?: () => void
 }
 
-export function FlightList({ onFlightsChange }: FlightListProps) {
-  const { user } = useAuth()
+export function FlightList({ flights, onFlightMutated }: FlightListProps) {
   const { toast } = useToast()
-  const [flights, setFlights] = useState<Flight[]>([])
-  const [loading, setLoading] = useState(true)
-
-  const loadFlights = useCallback(async () => {
-    if (!user) {
-      setLoading(false)
-      return
-    }
-    
-    try {
-      const userFlights = await getUserFlights(user.uid)
-      setFlights(userFlights)
-      onFlightsChange?.(userFlights.length > 0)
-    } catch (error) {
-      console.error('Error loading flights:', error)
-      toast({
-        title: "Error",
-        description: "Failed to load flights. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
-    }
-  }, [user, onFlightsChange, toast])
-
-  useEffect(() => {
-    loadFlights()
-  }, [loadFlights])
 
   const handleEdit = async (flight: Flight) => {
     try {
@@ -65,7 +35,7 @@ export function FlightList({ onFlightsChange }: FlightListProps) {
         title: "Flight updated",
         description: `Flight ${flight.flightNumber} has been updated.`,
       })
-      loadFlights()
+      onFlightMutated?.()
     } catch (error) {
       toast({
         title: "Error",
@@ -83,7 +53,7 @@ export function FlightList({ onFlightsChange }: FlightListProps) {
         description: "The flight has been deleted.",
         variant: "destructive",
       })
-      loadFlights()
+      onFlightMutated?.()
     } catch (error) {
       toast({
         title: "Error",
@@ -91,10 +61,6 @@ export function FlightList({ onFlightsChange }: FlightListProps) {
         variant: "destructive",
       })
     }
-  }
-
-  if (loading) {
-    return <div className="flex justify-center py-8">Loading flights...</div>
   }
 
   if (!flights.length) {

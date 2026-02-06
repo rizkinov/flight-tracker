@@ -1,23 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
-import { Plus, Save, Trash2, Check, ChevronsUpDown, FileDown, CalendarIcon } from "lucide-react"
-import { Input } from "@/components/ui/input"
+import { Trash2, FileDown } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
-import { createFlight } from "@/lib/services/flights"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
-import Image from 'next/image'
-import { DateRangePicker } from "@/components/ui/date-range-picker"
-import { format, addDays, differenceInDays } from "date-fns"
-import { DateRange } from "react-day-picker"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,10 +23,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { deleteAllFlights, getUserFlights } from "@/lib/services/flights"
+import { deleteAllFlights, getUserFlights, Flight } from "@/lib/services/flights"
 import { FlightList } from "@/components/flights/flight-list"
 import { StatsOverview } from "@/components/flights/stats-overview"
 import { EmptyState } from "@/components/flights/empty-state"
+import { YearSelector } from "@/components/flights/year-selector"
 import * as XLSX from 'xlsx'
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
@@ -54,16 +43,47 @@ export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
+  const [allFlights, setAllFlights] = useState<Flight[]>([])
   const [hasFlights, setHasFlights] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [refreshKey, setRefreshKey] = useState(0)
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear())
+
+  const availableYears = useMemo(() => {
+    const currentYear = new Date().getFullYear()
+    const yearsFromFlights = new Set(allFlights.map(f => parseInt(f.date.substring(0, 4), 10)))
+    yearsFromFlights.add(currentYear)
+    return Array.from(yearsFromFlights).sort((a, b) => a - b)
+  }, [allFlights])
+
+  const filteredFlights = useMemo(() => {
+    const yearStr = String(selectedYear)
+    return allFlights.filter(f => f.date.startsWith(yearStr))
+  }, [allFlights, selectedYear])
+
+  const loadFlights = async () => {
+    if (!user) return
+    try {
+      const flights = await getUserFlights(user.uid)
+      setAllFlights(flights)
+      setHasFlights(flights.length > 0)
+    } catch (error) {
+      console.error('Error loading flights:', error)
+      toast({
+        title: "Error",
+        description: "Failed to load flight data.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const refreshData = async () => {
     if (!user) return
     try {
       const flights = await getUserFlights(user.uid)
+      setAllFlights(flights)
       setHasFlights(flights.length > 0)
-      setRefreshKey(prev => prev + 1)
     } catch (error) {
       console.error('Error refreshing flights:', error)
       toast({
@@ -74,23 +94,18 @@ export default function DashboardPage() {
     }
   }
 
-  const handleExport = async (format: 'pdf' | 'excel') => {
-    if (!user) return
+  const handleExport = (exportFormat: 'pdf' | 'excel') => {
+    if (filteredFlights.length === 0) {
+      toast({
+        title: "No Data",
+        description: `There are no flights to export for ${selectedYear}.`,
+        variant: "destructive",
+      })
+      return
+    }
 
     try {
-      const flights = await getUserFlights(user.uid)
-      
-      if (flights.length === 0) {
-        toast({
-          title: "No Data",
-          description: "There are no flights to export.",
-          variant: "destructive",
-        })
-        return
-      }
-
-      // Prepare the data for export
-      const data = flights.map(flight => ({
+      const data = filteredFlights.map(flight => ({
         'Flight Number': flight.flightNumber,
         'Date': flight.date,
         'From': flight.from,
@@ -99,37 +114,32 @@ export default function DashboardPage() {
         'Notes': flight.notes || ''
       }))
 
-      if (format === 'excel') {
-        // Create Excel file
+      if (exportFormat === 'excel') {
         const worksheet = XLSX.utils.json_to_sheet(data)
         const workbook = XLSX.utils.book_new()
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Flights')
-        XLSX.writeFile(workbook, 'flights.xlsx')
+        XLSX.writeFile(workbook, `flights-${selectedYear}.xlsx`)
       } else {
-        // Create PDF file
         const doc = new jsPDF() as jsPDFWithAutoTable
-        
-        // Add title
+
         doc.setFontSize(16)
-        doc.text('Flight Records', 14, 20)
-        
-        // Add timestamp
+        doc.text(`Flight Records - ${selectedYear}`, 14, 20)
+
         doc.setFontSize(10)
         doc.text(`Generated on ${new Date().toLocaleString()}`, 14, 30)
-        
-        // Add table
+
         doc.autoTable({
           head: [['Flight Number', 'Date', 'From', 'To', 'Days', 'Notes']],
           body: data.map(row => Object.values(row)),
           startY: 40,
         })
-        
-        doc.save('flights.pdf')
+
+        doc.save(`flights-${selectedYear}.pdf`)
       }
 
       toast({
         title: "Export Successful",
-        description: `Your flights have been exported as ${format.toUpperCase()}.`,
+        description: `Your ${selectedYear} flights have been exported as ${exportFormat.toUpperCase()}.`,
       })
     } catch (error) {
       console.error('Error exporting flights:', error)
@@ -147,30 +157,14 @@ export default function DashboardPage() {
       return
     }
 
-    async function checkFlights() {
-      if (!user) return
-      try {
-        const flights = await getUserFlights(user.uid)
-        setHasFlights(flights.length > 0)
-      } catch (error) {
-        console.error('Error checking flights:', error)
-        toast({
-          title: "Error",
-          description: "Failed to load flight data. Please try again.",
-          variant: "destructive",
-        })
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    checkFlights()
-  }, [user, authLoading, router, toast])
+    loadFlights()
+  }, [user, authLoading, router])
 
   const handleReset = async () => {
     if (!user) return
     try {
       await deleteAllFlights(user.uid)
+      setAllFlights([])
       setHasFlights(false)
       toast({
         title: "Data reset successful",
@@ -204,14 +198,21 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col space-y-8">
       <div className="flex flex-col space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <YearSelector
+            selectedYear={selectedYear}
+            availableYears={availableYears}
+            onYearChange={setSelectedYear}
+          />
+        </div>
         <p className="text-muted-foreground">
           Overview of your travel statistics and flight records.
         </p>
       </div>
 
       {/* Statistics */}
-      <StatsOverview key={refreshKey} />
+      <StatsOverview flights={filteredFlights} selectedYear={selectedYear} />
 
       {/* Batch Add Flights */}
       <div>
@@ -279,8 +280,8 @@ export default function DashboardPage() {
             </DropdownMenu>
           </div>
         </div>
-        <FlightList key={refreshKey} onFlightsChange={setHasFlights} />
+        <FlightList flights={filteredFlights} onFlightMutated={refreshData} />
       </div>
     </div>
   )
-} 
+}

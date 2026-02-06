@@ -1,12 +1,10 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
+import { useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts"
-import { BaseCountrySelector } from "./base-country-selector"
 import { Progress } from "@/components/ui/progress"
-import { useAuth } from "@/lib/auth-context"
-import { getUserFlights, Flight } from "@/lib/services/flights"
+import { Flight } from "@/lib/services/flights"
 
 interface CountryData {
   name: string
@@ -27,31 +25,12 @@ const COLORS = [
   "#f5d0fe", // Light Magenta
 ]
 
-export function StatsOverview() {
-  const { user } = useAuth()
-  const [flights, setFlights] = useState<Flight[]>([])
-  const [loading, setLoading] = useState(true)
+interface StatsOverviewProps {
+  flights: Flight[]
+  selectedYear: number
+}
 
-  useEffect(() => {
-    async function loadFlights() {
-      if (!user) {
-        setLoading(false)
-        return
-      }
-      
-      try {
-        const userFlights = await getUserFlights(user.uid)
-        setFlights(userFlights)
-      } catch (error) {
-        console.error('Error loading flights:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    
-    loadFlights()
-  }, [user])
-
+export function StatsOverview({ flights, selectedYear }: StatsOverviewProps) {
   const stats = useMemo(() => {
     const countryDays = new Map<string, number>()
     let totalDays = 0
@@ -103,29 +82,17 @@ export function StatsOverview() {
   }, [flights])
 
   // Tax residency calculations
-  const currentYear = new Date().getFullYear()
   const isLeapYear = (year: number) => {
     return year % 400 === 0 || (year % 100 !== 0 && year % 4 === 0)
   }
-  const daysInYear = isLeapYear(currentYear) ? 366 : 365
+  const daysInYear = isLeapYear(selectedYear) ? 366 : 365
   const minDaysRequired = 183
   const maxTravelDays = daysInYear - minDaysRequired // Maximum days allowed outside Singapore
   const daysInSingapore = daysInYear - stats.totalDays // Days not traveling are considered as days in Singapore
   const remainingTravelDays = Math.max(0, maxTravelDays - stats.totalDays)
-  
+
   // Calculate percentage based on travel days used
   const travelDaysPercentage = Math.min(100, Math.round((stats.totalDays / maxTravelDays) * 100))
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-semibold tracking-tight">Statistics</h2>
-        <div className="flex min-h-[400px] items-center justify-center">
-          <div className="text-muted-foreground">Loading statistics...</div>
-        </div>
-      </div>
-    )
-  }
 
   if (!flights.length) {
     return (
@@ -135,7 +102,7 @@ export function StatsOverview() {
           <CardHeader className="text-center">
             <CardTitle>No Flight Data Available</CardTitle>
             <CardDescription>
-              Add your first flight to start seeing your travel statistics and tax residency tracking.
+              No flights recorded for {selectedYear}. Add flights to see your travel statistics and tax residency tracking.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -165,23 +132,23 @@ export function StatsOverview() {
                   outerRadius={100}
                 >
                   {stats.countryData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
+                    <Cell
+                      key={`cell-${index}`}
                       fill={entry.color}
                       className="opacity-90 hover:opacity-100 transition-opacity"
                     />
                   ))}
                 </Pie>
-                <Tooltip 
-                  contentStyle={{ 
+                <Tooltip
+                  contentStyle={{
                     backgroundColor: 'rgba(255, 255, 255, 0.95)',
                     borderRadius: '6px',
                     border: '1px solid #e2e8f0'
-                  }} 
+                  }}
                 />
-                <Legend 
+                <Legend
                   formatter={(value) => (
-                    <span 
+                    <span
                       className="text-xs text-muted-foreground"
                       title={value}
                     >
@@ -210,7 +177,7 @@ export function StatsOverview() {
             <CardContent>
               <div className="text-4xl font-bold">{stats.totalFlights}</div>
               <p className="text-xs text-muted-foreground">
-                Flights tracked this year
+                Flights tracked in {selectedYear}
               </p>
             </CardContent>
           </Card>
@@ -285,4 +252,4 @@ export function StatsOverview() {
       </div>
     </div>
   )
-} 
+}
