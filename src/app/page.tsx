@@ -31,12 +31,16 @@ export default function HomePage() {
   return (
     <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center">
       <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-        <div className="flex flex-col space-y-2 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Welcome to FlightTrack
+        <div className="flex flex-col space-y-3 text-center">
+          <p className="font-mono text-xs tracking-widest uppercase text-muted-foreground">
+            lifekit.sg / travel
+          </p>
+          <h1 className="text-3xl font-semibold tracking-tight">
+            FlightTrack
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Track your flights and monitor travel statistics
+          <p className="text-sm text-muted-foreground text-pretty">
+            Log your trips abroad and see how your days count toward
+            Singapore&apos;s 183-day tax-residency threshold.
           </p>
         </div>
         <div className="flex flex-col gap-4">

@@ -1,12 +1,15 @@
-import { addDays, differenceInDays, max, min } from "date-fns"
+import { addDays, differenceInDays, max, min, parseISO } from "date-fns"
 import { Flight } from "@/lib/services/flights"
 
 /**
  * Returns the end date of a flight (last day of stay).
  * Start date counts as day 1, so end = start + days - 1.
+ * flight.date is a 'yyyy-MM-dd' string; parseISO reads it as local midnight,
+ * matching the locally-constructed year boundaries below (new Date(y, m, d)
+ * would be UTC midnight and under-counts year-boundary overlaps in UTC+ zones).
  */
 export function getFlightEndDate(flight: Flight): Date {
-  return addDays(new Date(flight.date), flight.days - 1)
+  return addDays(parseISO(flight.date), flight.days - 1)
 }
 
 /**
@@ -14,7 +17,7 @@ export function getFlightEndDate(flight: Flight): Date {
  * For a flight Dec 24–Jan 5 (13 days), year 2025 returns 8, year 2026 returns 5.
  */
 export function getFlightDaysInYear(flight: Flight, year: number): number {
-  const flightStart = new Date(flight.date)
+  const flightStart = parseISO(flight.date)
   const flightEnd = getFlightEndDate(flight)
   const yearStart = new Date(year, 0, 1) // Jan 1
   const yearEnd = new Date(year, 11, 31) // Dec 31
