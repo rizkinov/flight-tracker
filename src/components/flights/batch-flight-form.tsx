@@ -1,5 +1,7 @@
 "use client"
 
+import { COUNTRIES } from "@/lib/countries"
+
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
@@ -64,34 +66,9 @@ export function BatchFlightForm({ onSuccess }: BatchFlightFormProps) {
   const [flights, setFlights] = useState<BatchFlight[]>([])
   const [saving, setSaving] = useState(false)
   const [usedCountries, setUsedCountries] = useState<Set<string>>(new Set())
-  const [countries, setCountries] = useState<Country[]>([])
-  const [loadingCountries, setLoadingCountries] = useState(true)
-
-  // Fetch countries from REST Countries API
-  useEffect(() => {
-    const fetchCountries = async () => {
-      try {
-        const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2,flags')
-        const data = await response.json()
-        // Sort countries by name
-        const sortedCountries = data.sort((a: Country, b: Country) => 
-          a.name.common.localeCompare(b.name.common)
-        )
-        setCountries(sortedCountries)
-      } catch (error) {
-        console.error('Error fetching countries:', error)
-        toast({
-          title: "Error",
-          description: "Failed to load countries. Please refresh the page.",
-          variant: "destructive"
-        })
-      } finally {
-        setLoadingCountries(false)
-      }
-    }
-
-    fetchCountries()
-  }, [toast])
+  // Static bundled list (src/lib/countries.ts) — restcountries.com v3.1 was deprecated
+  const countries: Country[] = COUNTRIES
+  const loadingCountries = false
 
   // Get color for a country based on its order of appearance
   const getCountryColor = (countryName: string) => {

@@ -1,5 +1,7 @@
 "use client"
 
+import { COUNTRIES } from "@/lib/countries"
+
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Pencil, Trash2, Check, ChevronsUpDown } from "lucide-react"
@@ -120,39 +122,14 @@ interface EditFlightDialogProps {
 export function FlightActions({ flight, onEdit, onDelete }: FlightActionsProps) {
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [editedFlight, setEditedFlight] = useState(flight)
-  const [countries, setCountries] = useState<Country[]>([])
-  const [loadingCountries, setLoadingCountries] = useState(true)
+  // Static bundled list (src/lib/countries.ts) — restcountries.com v3.1 was deprecated
+  const countries: Country[] = COUNTRIES
+  const loadingCountries = false
   const [usedCountries, setUsedCountries] = useState<Set<string>>(new Set([flight.from, flight.to]))
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const { toast } = useToast()
   const { user } = useAuth()
   const router = useRouter()
-
-  // Fetch countries from REST Countries API
-  useEffect(() => {
-    const fetchCountries = async () => {
-      try {
-        const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2,flags')
-        const data = await response.json()
-        // Sort countries by name
-        const sortedCountries = data.sort((a: Country, b: Country) => 
-          a.name.common.localeCompare(b.name.common)
-        )
-        setCountries(sortedCountries)
-      } catch (error) {
-        console.error('Error fetching countries:', error)
-        toast({
-          title: "Error",
-          description: "Failed to load countries. Please refresh the page.",
-          variant: "destructive"
-        })
-      } finally {
-        setLoadingCountries(false)
-      }
-    }
-
-    fetchCountries()
-  }, [toast])
 
   // Get color for a country based on its order of appearance
   const getCountryColor = (countryName: string) => {
